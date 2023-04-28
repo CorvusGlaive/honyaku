@@ -1,0 +1,497 @@
+{
+  "sentences": [
+    {
+      "trans": "быстро",
+      "orig": "fast",
+      "backend": 1
+    },
+    {
+      "translit": "bystro",
+      "src_translit": "fast"
+    }
+  ],
+  "dict": [
+    {
+      "pos": "adverb",
+      "terms": [
+        "быстро",
+        "скоро",
+        "крепко",
+        "часто",
+        "сильно",
+        "прочно",
+        "стойко"
+      ],
+      "entry": [
+        {
+          "word": "быстро",
+          "reverse_translation": [
+            "fast",
+            "quickly",
+            "quick",
+            "prompt",
+            "swift",
+            "soon"
+          ],
+          "score": 0.30978554
+        },
+        {
+          "word": "скоро",
+          "reverse_translation": [
+            "soon",
+            "fast",
+            "quickly",
+            "quick",
+            "before long",
+            "anon"
+          ],
+          "score": 0.0036065632
+        },
+        {
+          "word": "крепко",
+          "reverse_translation": [
+            "firmly",
+            "hard",
+            "tightly",
+            "tight",
+            "fast",
+            "strongly"
+          ],
+          "score": 0.0031827807
+        },
+        {
+          "word": "часто",
+          "reverse_translation": [
+            "often",
+            "frequently",
+            "thick",
+            "oft",
+            "oftentimes",
+            "fast"
+          ],
+          "score": 5.5308436E-4
+        },
+        {
+          "word": "сильно",
+          "reverse_translation": [
+            "strong",
+            "strongly",
+            "highly",
+            "heavily",
+            "heavy",
+            "fast"
+          ],
+          "score": 2.6125857E-4
+        },
+        {
+          "word": "прочно",
+          "reverse_translation": [
+            "fixedly",
+            "fast",
+            "substantially"
+          ],
+          "score": 2.0031388E-4
+        },
+        {
+          "word": "стойко",
+          "reverse_translation": [
+            "steadfastly",
+            "fast",
+            "perseveringly"
+          ],
+          "score": 7.254888E-5
+        }
+      ],
+      "base_form": "fast",
+      "pos_enum": 4
+    },
+    {
+      "pos": "adjective",
+      "terms": [
+        "быстрый",
+        "скорый",
+        "прочный",
+        "верный",
+        "крепкий",
+        "твердый",
+        "стойкий",
+        "нелиняющий",
+        "легкомысленный",
+        "фривольный",
+        "беспутный",
+        "закрепленный",
+        "фиксированный",
+        "неточный"
+      ],
+      "entry": [
+        {
+          "word": "быстрый",
+          "reverse_translation": [
+            "fast",
+            "quick",
+            "prompt",
+            "rapid",
+            "speedy",
+            "swift"
+          ],
+          "score": 0.20961139
+        },
+        {
+          "word": "скорый",
+          "reverse_translation": [
+            "early",
+            "fast",
+            "swift",
+            "rapid",
+            "speedy",
+            "quick"
+          ],
+          "score": 0.0014345917
+        },
+        {
+          "word": "прочный",
+          "reverse_translation": [
+            "lasting",
+            "strong",
+            "durable",
+            "solid",
+            "firm",
+            "fast"
+          ],
+          "score": 6.109228E-5
+        },
+        {
+          "word": "верный",
+          "reverse_translation": [
+            "right",
+            "true",
+            "faithful",
+            "loyal",
+            "correct",
+            "fast"
+          ],
+          "score": 1.4971308E-5
+        },
+        {
+          "word": "крепкий",
+          "reverse_translation": [
+            "strong",
+            "hard",
+            "sturdy",
+            "solid",
+            "fast",
+            "robust"
+          ],
+          "score": 1.3007298E-5
+        },
+        {
+          "word": "твердый",
+          "reverse_translation": [
+            "solid",
+            "hard",
+            "firm",
+            "strong",
+            "steadfast",
+            "fast"
+          ],
+          "score": 1.2029784E-5
+        },
+        {
+          "word": "стойкий",
+          "reverse_translation": [
+            "persistent",
+            "resistant",
+            "stable",
+            "steadfast",
+            "enduring",
+            "fast"
+          ],
+          "score": 1.0953243E-5
+        },
+        {
+          "word": "нелиняющий",
+          "reverse_translation": [
+            "washable",
+            "fast",
+            "unfading",
+            "wash"
+          ],
+          "score": 9.973041E-6
+        },
+        {
+          "word": "легкомысленный",
+          "reverse_translation": [
+            "frivolous",
+            "careless",
+            "flippant",
+            "giddy",
+            "light-headed",
+            "fast"
+          ],
+          "score": 4.0294726E-6
+        },
+        {
+          "word": "фривольный",
+          "reverse_translation": [
+            "frivolous",
+            "fast",
+            "gossamer"
+          ],
+          "score": 4.0294726E-6
+        },
+        {
+          "word": "беспутный",
+          "reverse_translation": [
+            "dissolute",
+            "dissipated",
+            "raffish",
+            "gay",
+            "scampish",
+            "fast"
+          ],
+          "score": 4.0294726E-6
+        },
+        {
+          "word": "закрепленный",
+          "reverse_translation": [
+            "fixed",
+            "stationary",
+            "fast"
+          ],
+          "score": 1.9947338E-6
+        },
+        {
+          "word": "фиксированный",
+          "reverse_translation": [
+            "fixed",
+            "fast"
+          ],
+          "score": 1.9947338E-6
+        },
+        {
+          "word": "неточный",
+          "reverse_translation": [
+            "inaccurate",
+            "imprecise",
+            "inexact",
+            "incorrect",
+            "loose",
+            "fast"
+          ],
+          "score": 1.9947338E-6
+        }
+      ],
+      "base_form": "fast",
+      "pos_enum": 3
+    },
+    {
+      "pos": "verb",
+      "terms": [
+        "поститься",
+        "голодать",
+        "говеть"
+      ],
+      "entry": [
+        {
+          "word": "поститься",
+          "reverse_translation": [
+            "fast"
+          ],
+          "score": 0.15822297
+        },
+        {
+          "word": "голодать",
+          "reverse_translation": [
+            "starve",
+            "fast",
+            "hunger",
+            "famish",
+            "clem"
+          ],
+          "score": 0.031646587
+        },
+        {
+          "word": "говеть",
+          "reverse_translation": [
+            "fast"
+          ],
+          "score": 1.5936874E-5
+        }
+      ],
+      "base_form": "fast",
+      "pos_enum": 2
+    },
+    {
+      "pos": "noun",
+      "terms": [
+        "пост",
+        "причал",
+        "говенье",
+        "швартов",
+        "засов",
+        "штрек"
+      ],
+      "entry": [
+        {
+          "word": "пост",
+          "reverse_translation": [
+            "fast",
+            "fasting",
+            "post",
+            "office",
+            "appointment",
+            "seat"
+          ],
+          "score": 0.0058540297,
+          "gender": 1
+        },
+        {
+          "word": "причал",
+          "reverse_translation": [
+            "berth",
+            "pier",
+            "dock",
+            "quay",
+            "wharf",
+            "fast"
+          ],
+          "score": 1.2029784E-5,
+          "gender": 1
+        },
+        {
+          "word": "говенье",
+          "reverse_translation": [
+            "fast"
+          ],
+          "score": 8.013563E-6,
+          "gender": 3
+        },
+        {
+          "word": "швартов",
+          "reverse_translation": [
+            "fast",
+            "hawser",
+            "shore-fast"
+          ],
+          "score": 7.071945E-6,
+          "gender": 1
+        },
+        {
+          "word": "засов",
+          "reverse_translation": [
+            "bolt",
+            "bar",
+            "hasp",
+            "fast"
+          ],
+          "score": 4.0294726E-6,
+          "gender": 1
+        },
+        {
+          "word": "штрек",
+          "reverse_translation": [
+            "drift",
+            "road",
+            "gallery",
+            "gangway",
+            "drive",
+            "fast"
+          ],
+          "score": 1.9947338E-6,
+          "gender": 1
+        }
+      ],
+      "base_form": "fast",
+      "pos_enum": 1
+    }
+  ],
+  "src": "en",
+  "confidence": 0.9660574,
+  "spell": {},
+  "ld_result": {
+    "srclangs": [
+      "en"
+    ],
+    "srclangs_confidences": [
+      0.9660574
+    ],
+    "extended_srclangs": [
+      "en"
+    ]
+  },
+  "definitions": [
+    {
+      "pos": "adjective",
+      "entry": [
+        {
+          "gloss": "moving or capable of moving at high speed.",
+          "definition_id": "m_en_gbus0352370.007"
+        },
+        {
+          "gloss": "(of a clock or watch) showing a time ahead of the correct time.",
+          "definition_id": "m_en_gbus0352370.018"
+        },
+        {
+          "gloss": "firmly fixed or attached.",
+          "definition_id": "m_en_gbus0352370.021"
+        },
+        {
+          "gloss": "(of a film) needing only a short exposure.",
+          "definition_id": "m_en_gbus0352370.024",
+          "label_info": {
+            "subject": [
+              "Photography"
+            ]
+          }
+        },
+        {
+          "gloss": "(of a dye) not fading in light or when washed.",
+          "definition_id": "m_en_gbus0352370.027"
+        },
+        {
+          "gloss": "(of a person or lifestyle) engaging in or involving exciting or shocking activities.",
+          "definition_id": "m_en_gbus0352370.029"
+        }
+      ],
+      "base_form": "fast"
+    },
+    {
+      "pos": "adverb",
+      "entry": [
+        {
+          "gloss": "at high speed.",
+          "definition_id": "m_en_gbus0352370.035"
+        },
+        {
+          "gloss": "so as to be hard to move; securely.",
+          "definition_id": "m_en_gbus0352370.041"
+        },
+        {
+          "gloss": "so as to be hard to wake.",
+          "definition_id": "m_en_gbus0352370.044"
+        }
+      ],
+      "base_form": "fast"
+    },
+    {
+      "pos": "verb",
+      "entry": [
+        {
+          "gloss": "abstain from all or some kinds of food or drink, especially as a religious observance.",
+          "definition_id": "m_en_gbus0352380.005"
+        }
+      ],
+      "base_form": "fast"
+    },
+    {
+      "pos": "noun",
+      "entry": [
+        {
+          "gloss": "an act or period of fasting.",
+          "definition_id": "m_en_gbus0352380.019"
+        }
+      ],
+      "base_form": "fast"
+    }
+  ]
+}

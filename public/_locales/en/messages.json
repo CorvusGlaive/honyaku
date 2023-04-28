@@ -1,0 +1,8 @@
+{
+	"serviceSettingsColor": {
+		"message": "This color will be used in the history search results"
+	},
+	"googleSettingsPreferJapanese": {
+		"message": "If there are Chinese characters in the text, translate from Japanese"
+	}
+}
