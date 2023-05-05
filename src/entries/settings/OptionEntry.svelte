@@ -21,14 +21,6 @@
 		}
 	});
 
-	function splitString(str: string): string {
-		return str.split("").reduce((acc, cur, i) => {
-			if (i === 0) return (acc += cur.toUpperCase());
-			acc += /[A-Z]/.test(cur) ? ` ${cur.toLowerCase()}` : cur;
-			return acc;
-		}, "");
-	}
-
 	function handleChange(e: Event) {
 		let target = e.currentTarget as HTMLInputElement;
 		let value: unknown;
@@ -49,20 +41,20 @@
 		type === "radio" && radioClasses,
 		type === "checkbox" && radioClasses,
 		disabled && "pointer-events-none opacity-50",
-		"p-2 flex justify-between items-center",
+		"p-2 flex gap-2 justify-between items-center",
 		$$props.class
 	);
 </script>
 
 <label class={classes}>
 	<div>
-		<span>{splitString(title)}</span>
+		<span>{title || "Title"}</span>
 		{#if description}
 			<p class="text-xs opacity-50">{description}</p>
 		{/if}
 	</div>
 	{#if type === "checkbox"}
-		<input type="checkbox" checked={value} on:change={handleChange} />
+		<input class="shrink-0" type="checkbox" checked={value} on:change={handleChange} />
 	{:else if type === "text"}
 		<Input class="w-min" {value} on:change={handleChange} />
 	{:else if type === "color"}

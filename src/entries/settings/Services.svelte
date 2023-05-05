@@ -17,34 +17,35 @@
 		$translationApi = newService[0];
 	}
 
-	function getDescription(service: string, title: string) {
-		return t(`${service}Settings${title.toUpperCase()}`) || null;
+	function getSettingsInfo(service: string, title: string) {
+		const _title = t(`${service}Settings${title.toUpperCase()}Title`) || null;
+		const desc = t(`${service}Settings${title.toUpperCase()}Desc`) || null;
+		return [_title, desc];
 	}
 </script>
 
 {#each Object.entries($services) as [name, settings]}
 	<Section title={name} class="w-3/4">
 		<OptionEntry
-			title={"enable"}
+			title={t("serviceSettingsEnableTitle")}
 			value={settings.enabled}
 			on:change={() => toggleService(name, settings)}
 		/>
 		<OptionEntry
 			disabled={!settings.enabled}
-			title={"color"}
+			title={t("serviceSettingsColorTitle")}
 			value={settings.color}
-			description={t("serviceSettingsColor")}
-			on:change={(e) => (
-				console.log(name, settings, e), (settings.color = e.detail)
-			)}
+			description={t("serviceSettingsColorDesc")}
+			on:change={(e) => (settings.color = e.detail)}
 		/>
-		{#each Object.entries(settings?.settings || {}) as [title, value]}
+		{#each Object.entries(settings?.settings || {}) as [settingsTitle, value]}
+			{@const [title, desc] = getSettingsInfo(name, settingsTitle)}
 			<OptionEntry
 				disabled={!settings.enabled}
 				{title}
 				{value}
-				description={getDescription(name, title)}
-				on:change={(e) => (settings.settings[title] = e.detail)}
+				description={desc}
+				on:change={(e) => (settings.settings[settingsTitle] = e.detail)}
 			/>
 		{/each}
 	</Section>
