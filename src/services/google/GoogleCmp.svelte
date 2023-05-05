@@ -11,6 +11,8 @@
 		},
 		settings: {
 			preferJapanese: true,
+			translateAfterSwitch: true,
+			persistLanguage: true,
 		},
 	});
 </script>
@@ -35,6 +37,7 @@
 	import { httpRequest, ttsPlay } from "~/lib/utils";
 	import { registerKeymaps } from "~/lib/keymapps";
 	import { supportedLanguages as langs } from "./supportedLanguages";
+
 	import { createEventDispatcher, type ComponentEvents } from "svelte";
 	import { isJapanese } from "wanakana";
 	import { slide } from "svelte/transition";
@@ -50,11 +53,12 @@
 	const q = new Query(name, translate);
 
 	let showDefinition = false;
+	let _langs: { srcLang?: string; targetLang?: string } = {};
 
 	async function translate(
 		query: string,
-		sl = $store.srcLang,
-		tl = $store.targetLang
+		sl = _langs.srcLang || $store.srcLang,
+		tl = _langs.targetLang || $store.targetLang
 	): Promise<{ result: GoogleTranslateResponse; keys: string[] }> {
 		const isFromJapanese =
 			sl === "auto" && $store.settings.preferJapanese && isJapanese(query);
@@ -98,7 +102,7 @@
 	}
 
 	async function reverseTranslation() {
-		if (!$q.data?.src && !$q.data?.sentences[0].trans) {
+		if (!$q.data?.src && !$q.data?.sentences?.[0]?.trans) {
 			let _srcLang = $store.srcLang;
 			$store.srcLang = $store.targetLang;
 			$store.targetLang = _srcLang;
@@ -112,12 +116,29 @@
 
 	async function handleLanguageChange(e: ComponentEvents<Select>["change"]) {
 		const { id, value } = e.detail;
-		$store[id] = value;
+		_langs[id] = value;
 		$store.recentLangs = union($store.recentLangs, [value]);
 
-		if (!$q.data) return;
+		if (!$q.data) {
+			$store[id] = value;
+			return;
+		}
+
+		$q.setState("success", { ...$q.data, [id]: value });
+
+		if ($store.settings.persistLanguage) {
+			$store[id] = value;
+		}
+		if (!$store.settings.translateAfterSwitch) return;
 
 		$q.fetch(query);
+	}
+
+	function onClear() {
+		query = "";
+		$q.setState("initial");
+		_langs = {};
+		dispatch("clear");
 	}
 
 	const handleWindowKeydown = registerKeymaps(
@@ -144,7 +165,7 @@
 				},
 			],
 		},
-		{ group: name as string }
+		{ group: name }
 	);
 </script>
 
@@ -210,14 +231,7 @@
 		/>
 		<div slot="right" class="flex flex-col items-end justify-between gap-2 p-2">
 			{#if query.length > 0}
-				<Button
-					icon
-					on:click={() => {
-						query = "";
-						$q.setState("initial");
-						dispatch("clear");
-					}}
-				>
+				<Button icon on:click={onClear}>
 					<Icon title="Clear input field">
 						<CloseIcon variant="outline" />
 					</Icon>
@@ -237,13 +251,13 @@
 			</div>
 		</div>
 	</WithIcons>
-	{#if $q.data?.sentences[0].trans}
+	{#if $q.data?.sentences?.[0]?.trans}
 		<section
 			class="surface-2 card grid grid-cols-[1fr,auto] bg-gradient-to-br from-brand-400/20 p-2 font-bold dark:from-brand-700/20"
 		>
 			<div>
 				<p class="mb-1">{$q.data.sentences[0].trans}</p>
-				{#if $q.data?.sentences.at(-1).src_translit}
+				{#if $q.data.sentences.at(-1)?.src_translit}
 					<div class="text-xs font-normal text-surface-500">
 						{$q.data.sentences.at(-1).src_translit}
 					</div>

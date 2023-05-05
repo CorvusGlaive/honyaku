@@ -1,8 +1,29 @@
 {
-	"serviceSettingsColor": {
+	"serviceSettingsEnableTitle": {
+		"message": "Enable"
+	},
+	"serviceSettingsColorTitle": {
+		"message": "Color"
+	},
+	"serviceSettingsColorDesc": {
 		"message": "This color will be used in the history search results"
 	},
-	"googleSettingsPreferJapanese": {
+	"googleSettingsPreferJapaneseTitle": {
+		"message": "Prefer Japanese"
+	},
+	"googleSettingsPreferJapaneseDesc": {
 		"message": "If there are Chinese characters in the text, translate from Japanese"
+	},
+	"googleSettingsPersistLanguageTitle": {
+		"message": "Persist Language"
+	},
+	"googleSettingsPersistLanguageDesc": {
+		"message": "If you want to re-translate from/to another language, the selected language will be saved as your preferred one"
+	},
+	"googleSettingstranslateAfterSwitchTitle": {
+		"message": "Translate after language switching"
+	},
+	"googleSettingstranslateAfterSwitchDesc": {
+		"message": "Re-translate if language was changed"
 	}
 }

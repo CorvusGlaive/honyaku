@@ -8,10 +8,10 @@
 - [ ] Will need to refactor for MV3.
 
 ## Services
-- [ ] Improve language switching in Google service.
+- [x] Improve language switching in Google service.
 - [ ] Check translit for Google service. Consider using both source and target language translit.
 - [ ] Jisho. Add an ability to type with hiragana/katakana.
-- [ ] Make use of localisation for settings descriptions.
+- [x] Make use of localisation for settings descriptions.
 
 - [ ] Add http error handling and state of the Response.
 - [ ] Improve `WithIcons` component. Reduce boilerplate needed for defining action section.
