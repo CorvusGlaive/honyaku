@@ -21,6 +21,7 @@
     "@sveltejs/vite-plugin-svelte": "2.x",
     "@tsconfig/svelte": "4.x",
     "@types/lodash-es": "^4.17.7",
+    "@types/wanakana": "^4.0.3",
     "@types/webextension-polyfill": "^0.10.0",
     "autoprefixer": "^10.4.14",
     "cross-env": "^7.0.3",
