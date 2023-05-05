@@ -7,23 +7,25 @@
 	import Button from "./Button.svelte";
 	import Icon from "./Icon.svelte";
 	import { tick } from "svelte";
-	import type {HTMLAttributes} from "svelte/elements"
+	import type { HTMLAttributes } from "svelte/elements";
 
 	interface $$Props extends HTMLAttributes<HTMLInputElement> {
-		value?: string,
-		autofocus?: boolean,
-		isMainInput?: boolean,
-		type?: "text" | "search" | "color"
+		value?: string;
+		autofocus?: boolean;
+		isMainInput?: boolean;
+		type?: "text" | "search" | "color";
+		ref?: HTMLInputElement;
 	}
 
 	export let value = "";
 	export let autofocus = false;
 	export let isMainInput = false;
-	export let type: $$Props['type'] = "text";
+	export let type: $$Props["type"] = "text";
 
 	export let ref: HTMLInputElement = null;
 
 	const dispatch = createEventDispatcher();
+	$: type === "search" && ref && (ref.value = value);
 
 	onMount(() => {
 		autofocus && ref.focus();
@@ -65,6 +67,18 @@
 		"focus-within:ring-brand-400",
 		$$props.class
 	);
+
+	// Hack around Wanakana.bind for Firefox, which doesn't update value if there is two-way bindings
+	function bindValue(node: HTMLInputElement) {
+		const handler = (e: InputEvent) =>
+			(value = (e.target as HTMLInputElement).value);
+		node.addEventListener("keyup", handler);
+		return {
+			destroy() {
+				node.removeEventListener("keyup", handler);
+			},
+		};
+	}
 </script>
 
 {#if type === "text"}
@@ -83,17 +97,19 @@
 
 {#if type === "search"}
 	<div class={searchCss}>
+		<slot name="left" />
 		<input
+			type="text"
 			bind:this={ref}
-			bind:value
+			use:bindValue
 			class={searchInputCss}
 			data-is-main-input={isMainInput}
 			on:change
 			on:input
 			on:keydown
 			on:keyup
-			type="text"
 		/>
+		<slot />
 		{#if value}
 			<Button icon className="p-2" on:click={() => dispatch("clear")}>
 				<Icon title="Clear input field">
@@ -104,7 +120,7 @@
 		<Button
 			icon
 			on:click={() => dispatch("send")}
-			className="p-2 bg-surface-100 hover:!bg-brand-300 hover:!text-brand-900 border-l border-l-surface-200 dark:bg-surface-700 dark:border-l-surface-600/50"
+			className="p-2 bg-surface-100 hover:!bg-brand-300 hover:!text-brand-900 border-l !border-l-surface-500/10 dark:bg-surface-700"
 		>
 			<Icon><SendIcon /></Icon>
 		</Button>

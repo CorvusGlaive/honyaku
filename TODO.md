@@ -10,7 +10,7 @@
 ## Services
 - [x] Improve language switching in Google service.
 - [ ] Check translit for Google service. Consider using both source and target language translit.
-- [ ] Jisho. Add an ability to type with hiragana/katakana.
+- [x] Jisho. Add an ability to type with hiragana/katakana.
 - [x] Make use of localisation for settings descriptions.
 
 - [ ] Add http error handling and state of the Response.

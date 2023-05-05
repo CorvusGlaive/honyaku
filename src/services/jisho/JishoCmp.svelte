@@ -16,11 +16,14 @@
 	import Popover from "~/lib/components/Popover.svelte";
 	import SendIcon from "~/lib/icons/SendIcon.svelte";
 	import Spinner from "~/lib/components/Spinner.svelte";
+
 	import type { JishoResponse } from "./types";
 	import { parseDom } from "./utils";
 	import { Query } from "~/lib/query";
 	import { httpRequest } from "~/lib/utils";
 	import { registerKeymaps } from "~/lib/keymapps";
+
+	import { bind, unbind } from "wanakana";
 	import { createEventDispatcher } from "svelte";
 	import { fade } from "svelte/transition";
 	import { quintOut } from "svelte/easing";
@@ -33,8 +36,20 @@
 
 	const q = new Query(name, translate);
 	const dispatch = createEventDispatcher();
+
 	let showKanjiSection = false;
 	let kanjiButtonRef: HTMLButtonElement;
+	let isKanaInput = false;
+	let inputEl: HTMLInputElement;
+
+	$: bindInput(inputEl, isKanaInput);
+	function bindInput(input: HTMLInputElement, isOn: boolean) {
+		if (!input) return;
+		if (isOn) return bind(input);
+		try {
+			unbind(input);
+		} catch {}
+	}
 
 	async function translate(query: string) {
 		query.trim();
@@ -62,6 +77,10 @@
 	const handleWindowKeydown = registerKeymaps(
 		{
 			"s-k": ["showKanjiSection", () => (showKanjiSection = !showKanjiSection)],
+			"i-c-k": [
+				"toggleKanaInput",
+				(e) => (e.preventDefault(), (isKanaInput = !isKanaInput)),
+			],
 		},
 		{ group: name as string }
 	);
@@ -76,18 +95,28 @@
 		style="grid-template-columns: 1fr max-content;"
 	>
 		<Input
+			type="search"
+			bind:ref={inputEl}
 			bind:value={query}
 			isMainInput={true}
 			autofocus
 			on:keydown={handleKeyDown}
-			type="search"
 			on:clear={() => {
 				query = "";
 				$q.setState("initial");
 				dispatch("clear");
 			}}
 			on:send={() => $q.fetch(query)}
-		/>
+		>
+			<button
+				slot="left"
+				on:click={() => (isKanaInput = !isKanaInput)}
+				class="whitespace-nowrap border-r border-r-surface-500/10 bg-gray-400/20 px-2 text-[0.75em] font-bold transition-opacity hover:brightness-125 {isKanaInput
+					? ''
+					: 'opacity-30 hover:opacity-50'}"
+				title="Toggle Hiragana/Katakana input">かナ</button
+			>
+		</Input>
 		{#if $q.data?.kanjis?.length}
 			{@const data = $q.data}
 			<Popover
