@@ -5,19 +5,6 @@
 		name: "jisho",
 		color: "emerald",
 	});
-	type JishoResponse = {
-		words?: {
-			furigana: string;
-			kanji: string;
-			entries: [
-				{
-					tag: string;
-					definitions: { meaning: string; additionalInfo: string }[];
-				}
-			];
-		}[];
-		kanjis?: { kanji: string; meanings: string; kun: string; on: string }[];
-	};
 </script>
 
 <script lang="ts">
@@ -29,6 +16,8 @@
 	import Popover from "~/lib/components/Popover.svelte";
 	import SendIcon from "~/lib/icons/SendIcon.svelte";
 	import Spinner from "~/lib/components/Spinner.svelte";
+	import type { JishoResponse } from "./types";
+	import { parseDom } from "./utils";
 	import { Query } from "~/lib/query";
 	import { httpRequest } from "~/lib/utils";
 	import { registerKeymaps } from "~/lib/keymapps";
@@ -42,6 +31,7 @@
 		$q.setState("success", he);
 	}
 
+	const q = new Query(name, translate);
 	const dispatch = createEventDispatcher();
 	let showKanjiSection = false;
 	let kanjiButtonRef: HTMLButtonElement;
@@ -57,59 +47,9 @@
 			{ resMethod: "text" }
 		);
 		page = new DOMParser().parseFromString(page as string, "text/html");
+		let result = parseDom(page);
 
-		let res = { words: [], kanjis: [] };
-		const words = page.querySelectorAll("#primary .concept_light");
-
-		words.forEach((wordEl) => {
-			let word = { entries: [], furigana: "", kanji: "" };
-
-			word.furigana =
-				wordEl.querySelector(".furigana")?.textContent.trim() || "";
-			word.kanji = wordEl.querySelector(".text")?.textContent.trim() || "";
-
-			let defs = {};
-			wordEl.querySelectorAll(".meaning-tags").forEach((tag) => {
-				const defEl = tag.nextElementSibling.children[0];
-				let def = { tag: "", meaning: "", additionalInfo: "" };
-
-				def.tag = tag.textContent.trim();
-
-				if (def.tag !== "Notes" && def.tag !== "Other forms") {
-					def.meaning = defEl.children[1].textContent.trim();
-					def.additionalInfo = defEl.children[3]?.textContent.trim() || null;
-				} else {
-					def.meaning = defEl.textContent.trim();
-					def.additionalInfo = null;
-				}
-				defs[def.tag] ? defs[def.tag].push(def) : (defs[def.tag] = [def]);
-			});
-
-			for (const [tag, def] of Object.entries(defs)) {
-				word.entries.push({ tag, definitions: def });
-			}
-
-			res.words.push(word);
-		});
-
-		const kanjis = page.querySelectorAll("#secondary .kanji_light");
-
-		const trim = (kanji: HTMLElement | undefined) => {
-			if (!kanji) return "";
-			return kanji.textContent.trim().replaceAll("/\ns+/g", "");
-		};
-		kanjis.forEach((kanji) => {
-			const entry = { kanji: "", meanings: "", kun: "", on: "" };
-
-			entry.kanji = trim(kanji.querySelector(".literal"));
-			entry.meanings = trim(kanji.querySelector(".meanings"));
-			entry.kun = trim(kanji.querySelector(".kun.readings"));
-			entry.on = trim(kanji.querySelector(".on.readings"));
-
-			res.kanjis.push(entry);
-		});
-
-		return { result: res, keys: [query] };
+		return { result, keys: [query] };
 	}
 
 	function handleKeyDown(e: KeyboardEvent & { target: HTMLInputElement }) {
@@ -118,8 +58,6 @@
 		e.preventDefault();
 		$q.fetch(e.target.value);
 	}
-
-	const q = new Query(name, translate);
 
 	const handleWindowKeydown = registerKeymaps(
 		{
