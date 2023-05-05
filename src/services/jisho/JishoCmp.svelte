@@ -21,20 +21,20 @@
 </script>
 
 <script lang="ts">
-	import Input from "~/lib/components/Input.svelte";
-	import Button from "~/lib/components/Button.svelte";
 	import AudioButton from "~/lib/components/AudioButton.svelte";
+	import Button from "~/lib/components/Button.svelte";
+	import CopyIcon from "~/lib/icons/CopyIcon.svelte";
 	import Icon from "~/lib/components/Icon.svelte";
+	import Input from "~/lib/components/Input.svelte";
+	import Popover from "~/lib/components/Popover.svelte";
+	import SendIcon from "~/lib/icons/SendIcon.svelte";
+	import Spinner from "~/lib/components/Spinner.svelte";
+	import { Query } from "~/lib/query";
 	import { httpRequest } from "~/lib/utils";
 	import { registerKeymaps } from "~/lib/keymapps";
+	import { createEventDispatcher } from "svelte";
 	import { fade } from "svelte/transition";
 	import { quintOut } from "svelte/easing";
-	import Spinner from "~/lib/components/Spinner.svelte";
-	import SendIcon from "~/lib/icons/SendIcon.svelte";
-	import { createEventDispatcher } from "svelte";
-	import CopyIcon from "~/lib/icons/CopyIcon.svelte";
-	import Popover from "~/lib/components/Popover.svelte";
-	import { Query } from "~/lib/query";
 
 	export let query: string;
 	export function showResult(he: JishoResponse) {

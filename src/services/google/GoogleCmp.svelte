@@ -17,28 +17,28 @@
 
 <script lang="ts">
 	import AudioButton from "~/lib/components/AudioButton.svelte";
-	import PosSection from "~/lib/components/PosSection.svelte";
-	import TextArea from "~/lib/components/TextArea.svelte";
-	import Select from "~/lib/components/Select.svelte";
+	import Button from "~/lib/components/Button.svelte";
+	import ChevronIcon from "~/lib/icons/ChevronIcon.svelte";
+	import CloseIcon from "~/lib/icons/CloseIcon.svelte";
+	import CopyIcon from "~/lib/icons/CopyIcon.svelte";
 	import Icon from "~/lib/components/Icon.svelte";
+	import PosSection from "~/lib/components/PosSection.svelte";
+	import Select from "~/lib/components/Select.svelte";
+	import SendIcon from "~/lib/icons/SendIcon.svelte";
 	import Spinner from "~/lib/components/Spinner.svelte";
+	import TextArea from "~/lib/components/TextArea.svelte";
+	import WithIcons from "~/lib/components/WithIcons.svelte";
 	import { MasonryGrid } from "@egjs/svelte-grid";
 
-	import { supportedLanguages as langs } from "./supportedLanguages";
 	import type { GoogleTranslateResponse } from "./types";
+	import { Query } from "~/lib/query";
 	import { httpRequest, ttsPlay } from "~/lib/utils";
 	import { registerKeymaps } from "~/lib/keymapps";
-	import { Query } from "~/lib/query";
-	import { union } from "lodash-es";
+	import { supportedLanguages as langs } from "./supportedLanguages";
 	import { createEventDispatcher, type ComponentEvents } from "svelte";
 	import { isJapanese } from "wanakana";
-	import CloseIcon from "~/lib/icons/CloseIcon.svelte";
-	import SendIcon from "~/lib/icons/SendIcon.svelte";
-	import ChevronIcon from "~/lib/icons/ChevronIcon.svelte";
-	import CopyIcon from "~/lib/icons/CopyIcon.svelte";
-	import Button from "~/lib/components/Button.svelte";
-	import WithIcons from "~/lib/components/WithIcons.svelte";
 	import { slide } from "svelte/transition";
+	import { union } from "lodash-es";
 
 	export let query: string;
 	export function showResult(he: GoogleTranslateResponse) {
