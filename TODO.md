@@ -16,3 +16,7 @@
 - [ ] Add http error handling and state of the Response.
 - [ ] Improve `WithIcons` component. Reduce boilerplate needed for defining action section.
 - [ ] Refactor building scripts.
+
+## History
+- [ ] Add an ability to delete one or all entries in the history.
+- [ ] Add search by sites.
