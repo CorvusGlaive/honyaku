@@ -1,6 +1,6 @@
 import { runtime } from "webextension-polyfill";
-import { db } from "./db";
-import { getActiveTab, isContentScript } from "./utils";
+import { db } from "../db";
+import { getActiveTab, isContentScript } from "../utils";
 
 /**
  * A history entry.
@@ -36,12 +36,6 @@ export async function addHistory(entry: HistoryEntry) {
 		.store.index("keys")
 		.openCursor(entry.keys);
 
-	console.log(
-		"%chistory",
-		"font-weight: bold; font-size:14px;",
-		":addHistory:cursor",
-		dbEntryCursor
-	);
 	if (dbEntryCursor) {
 		entry.sources = { ...dbEntryCursor.value.sources, ...entry.sources };
 		dbEntryCursor.update(entry);

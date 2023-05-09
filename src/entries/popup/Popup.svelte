@@ -10,7 +10,7 @@
 	import { getGlobalShortcuts } from "~/lib/keymapps";
 	import Scrollbar from "~/lib/components/Scrollbar.svelte";
 	import TranslationServices from "~/services/TranslationServices.svelte";
-	import History from "~/lib/components/History.svelte";
+	import History from "~/lib/history";
 	import { initAppearance } from "~/entries/settings/appearance";
 
 	const { translationApi } = store;

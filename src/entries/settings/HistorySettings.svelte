@@ -1,10 +1,9 @@
 <script lang="ts">
 	import TranslationServices from "~/services/TranslationServices.svelte";
-	import History from "~/lib/components/History.svelte";
+	import History from "~/lib/history";
 	import { onMount } from "svelte";
 
 	let selectedText = "";
-	let historySection: HTMLElement;
 	let contentEl: HTMLElement;
 	let contentHeight = 0;
 	let showResult: (arg: any) => any;
@@ -19,14 +18,10 @@
 </script>
 
 <template>
-	<History
-		target={historySection}
-		isModal={false}
-		on:select={(e) => showResult(e.detail)}
-	/>
-
 	<div class="grid grid-cols-2 gap-3">
-		<section bind:this={historySection} />
+		<section>
+			<History isModal={false} on:select={(e) => showResult(e.detail)} />
+		</section>
 		<section
 			bind:this={contentEl}
 			class="top-2 self-start"
