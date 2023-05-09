@@ -70,6 +70,24 @@ export async function getAllHistory() {
 	return _db.getAllFromIndex("history", "time");
 }
 
+export async function deleteHistory(key?: string) {
+	const _db = await db;
+
+	if (!key) {
+		return _db.clear("history");
+	}
+
+	try {
+		const cursor = await _db
+			.transaction("history", "readwrite")
+			.store.index("keys")
+			.openCursor(key);
+		cursor?.delete();
+	} catch (e) {
+		console.error("history:deleteHistory", e);
+	}
+}
+
 async function getTabInfo(): Promise<
 	[url: string, title: string, timestamp: number, isPopup: boolean]
 > {

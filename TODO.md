@@ -18,5 +18,5 @@
 - [ ] Refactor building scripts.
 
 ## History
-- [ ] Add an ability to delete one or all entries in the history.
+- [x] Add an ability to delete one or all entries in the history.
 - [ ] Add search by sites.

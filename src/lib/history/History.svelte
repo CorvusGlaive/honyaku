@@ -4,7 +4,7 @@
 	import Portal from "~/lib/components/Portal.svelte";
 	import Scrollbar from "~/lib/components/Scrollbar.svelte";
 
-	import { getAllHistory, type HistoryEntry } from "./history";
+	import { getAllHistory, deleteHistory, type HistoryEntry } from "./history";
 	import { registerKeymaps } from "~/lib/keymapps";
 
 	import Fuse from "fuse.js";
@@ -17,6 +17,7 @@
 	let query = "";
 	let items: HistoryEntry[] = [];
 	let filtered = items;
+	let historyCount = 0;
 
 	const dispatch = createEventDispatcher<{ select: HistoryEntry }>();
 	const classes = "surface-2 card flex flex-col divide-y";
@@ -35,6 +36,7 @@
 	}
 	$: open && getHistory();
 	$: !open && (query = "");
+	$: historyCount = items.length;
 
 	async function getHistory() {
 		const history = (await getAllHistory()).reverse();
@@ -53,6 +55,20 @@
 	}: ComponentEvents<HistoryList>["select"]) {
 		if (isModal) open = false;
 		dispatch("select", item);
+	}
+
+	function deleteItem({
+		detail: item,
+	}: ComponentEvents<HistoryList>["delete"]) {
+		deleteHistory(item.keys);
+		getHistory();
+	}
+
+	function deleteAll() {
+		deleteHistory();
+		items.length = 0;
+		fuse.setCollection([]);
+		document.documentElement.scrollTo({ top: 0, behavior: "smooth" });
 	}
 
 	const keymaps = registerKeymaps(
@@ -83,7 +99,11 @@
 				on:input={debSearchHistory}
 				on:close={() => (open = false)}
 			/>
-			<HistoryList items={filtered} on:select={selectItem} />
+			<HistoryList
+				items={filtered}
+				on:select={selectItem}
+				on:delete={deleteItem}
+			/>
 		</Scrollbar>
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
 		{#if isModal}
@@ -99,6 +119,16 @@
 {#if !isModal}
 	<div class={classes}>
 		<HistoryInput bind:query {isModal} on:input={debSearchHistory} />
-		<HistoryList items={filtered} on:select={selectItem} />
+		<HistoryList
+			items={filtered}
+			on:select={selectItem}
+			on:delete={deleteItem}
+		/>
 	</div>
+	{#if historyCount > 0}
+		<button
+			class="card mt-2 w-full bg-red-500 p-2 font-bold text-white transition-colors hover:bg-red-400"
+			on:click={deleteAll}>Delete all</button
+		>
+	{/if}
 {/if}
