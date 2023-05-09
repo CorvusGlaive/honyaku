@@ -9,6 +9,7 @@
 
 	import Fuse from "fuse.js";
 	import { createEventDispatcher, type ComponentEvents } from "svelte";
+	import { debounce } from "lodash-es";
 
 	export let isModal = true;
 	export let open = !isModal;
@@ -19,6 +20,7 @@
 
 	const dispatch = createEventDispatcher<{ select: HistoryEntry }>();
 	const classes = "surface-2 card flex flex-col divide-y";
+	const debSearchHistory = debounce(searchHistory, 300);
 	const fuse = new Fuse(items, {
 		keys: [
 			{ name: "query", weight: 0.7 },
@@ -29,6 +31,7 @@
 
 	$: if (!query) {
 		filtered = items;
+		debSearchHistory.cancel();
 	}
 	$: open && getHistory();
 	$: !open && (query = "");
@@ -77,7 +80,7 @@
 			<HistoryInput
 				bind:query
 				{isModal}
-				on:input={searchHistory}
+				on:input={debSearchHistory}
 				on:close={() => (open = false)}
 			/>
 			<HistoryList items={filtered} on:select={selectItem} />
@@ -95,7 +98,7 @@
 
 {#if !isModal}
 	<div class={classes}>
-		<HistoryInput bind:query {isModal} on:input={searchHistory} />
+		<HistoryInput bind:query {isModal} on:input={debSearchHistory} />
 		<HistoryList items={filtered} on:select={selectItem} />
 	</div>
 {/if}
