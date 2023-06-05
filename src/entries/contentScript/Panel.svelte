@@ -19,6 +19,7 @@
 	export let ref = null;
 	export let pos = { x: 0, y: 0, cx: 0, cy: 0 };
 	export let selectedText = "";
+	export let shouldAutoTranslate = false;
 
 	let offset = 10;
 	const virtualEl = {
@@ -64,7 +65,7 @@
 >
 	<Scrollbar>
 		<nav
-			class="path group absolute inset-y-[auto] inset-x-0 top-0 z-[3] rounded-md p-1 shadow-lg overflow-hidden outline outline-1 outline-surface-400/30 transition-all hover:m-1 hover:bg-white dark:hover:bg-surface-800"
+			class="path group absolute inset-x-0 inset-y-[auto] top-0 z-[3] overflow-hidden rounded-md p-1 shadow-lg outline outline-1 outline-surface-400/30 transition-all hover:m-1 hover:bg-white dark:hover:bg-surface-800"
 		>
 			<div class="absolute inset-0 bg-amber-500 group-hover:hidden" />
 			<div class="flex gap-1">
@@ -79,7 +80,7 @@
 			</div>
 		</nav>
 		<section class="p-2">
-			<TranslationServices {selectedText} />
+			<TranslationServices {shouldAutoTranslate} {selectedText} />
 		</section>
 	</Scrollbar>
 </div>

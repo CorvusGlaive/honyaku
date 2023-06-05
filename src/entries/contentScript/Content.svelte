@@ -15,6 +15,7 @@
 	let panelRef: HTMLDivElement;
 	let buttonRef: HTMLButtonElement;
 	let isScrollbarHold = false;
+	let shouldAutoTranslate = false;
 
 	function handleMouseDown() {
 		isScrollbarHold = isScrollThumbHold.get();
@@ -39,6 +40,13 @@
 		pos = { x: e.pageX, y: e.pageY, cx: e.clientX, cy: e.clientY };
 	}
 
+	function handleButtonClick(e: PointerEvent) {
+		e.preventDefault();
+		shouldAutoTranslate = e.type === "contextmenu";
+		isShowPanel = true;
+		isShowButton = false;
+	}
+
 	const contentShortcuts = registerKeymaps(
 		{
 			Escape: () => {
@@ -61,13 +69,11 @@
 {#if isShowButton}
 	<Button
 		bind:ref={buttonRef}
-		on:click={() => {
-			isShowPanel = true;
-			isShowButton = false;
-		}}
+		on:click={handleButtonClick}
+		on:contextmenu={handleButtonClick}
 		{pos}
 	/>
 {/if}
 {#if isShowPanel}
-	<Panel {selectedText} {pos} bind:ref={panelRef} />
+	<Panel {shouldAutoTranslate} {selectedText} {pos} bind:ref={panelRef} />
 {/if}

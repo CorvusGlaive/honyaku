@@ -14,6 +14,7 @@ export type ServiceCmp = ComponentType<
 		{
 			query: string;
 			showResult?: (res: any) => void;
+			translate?: (query: string) => void;
 		},
 		{ clear: CustomEvent }
 	>

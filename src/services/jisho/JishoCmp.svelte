@@ -33,8 +33,13 @@
 		if (!he) return $q.setState("initial");
 		$q.setState("success", he);
 	}
+	export function translate(query: string) {
+		query = query.trim();
+		if (!query) return;
+		$q.fetch(query);
+	}
 
-	const q = new Query(name, translate);
+	const q = new Query(name, _translate);
 	const dispatch = createEventDispatcher();
 
 	let showKanjiSection = false;
@@ -51,7 +56,7 @@
 		} catch {}
 	}
 
-	async function translate(query: string) {
+	async function _translate(query: string) {
 		query.trim();
 		if (!query) return;
 

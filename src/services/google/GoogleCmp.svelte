@@ -48,14 +48,19 @@
 		if (!he) return $q.setState("initial");
 		$q.setState("success", he);
 	}
+	export function translate(query: string) {
+		query = query.trim();
+		if (!query) return;
+		$q.fetch(query);
+	}
 
 	const dispatch = createEventDispatcher();
-	const q = new Query(name, translate);
+	const q = new Query(name, _translate);
 
 	let showDefinition = false;
 	let _langs: { srcLang?: string; targetLang?: string } = {};
 
-	async function translate(
+	async function _translate(
 		query: string,
 		sl = _langs.srcLang || $store.srcLang,
 		tl = _langs.targetLang || $store.targetLang

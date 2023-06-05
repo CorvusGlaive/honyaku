@@ -7,6 +7,7 @@
 	import { onMount, tick } from "svelte";
 
 	export let selectedText = "";
+	export let shouldAutoTranslate = false;
 
 	const { translationApi } = store;
 
@@ -14,8 +15,10 @@
 	let service: Service = null;
 	let isShowResult = false;
 	let showCmpResult: typeof showResult;
+	let translate: (q: string) => void;
 
 	$: query = selectedText;
+	$: shouldAutoTranslate && _translate();
 
 	onMount(() =>
 		srv.currentService().subscribe((_service) => {
@@ -37,6 +40,11 @@
 		selectedHistory = res;
 		await tick();
 		showCmpResult?.(res.result);
+	}
+
+	async function _translate() {
+		await tick();
+		translate(query);
 	}
 
 	function handleInputClear() {
@@ -66,6 +74,7 @@
 		<svelte:component
 			this={service?.component}
 			bind:showResult={showCmpResult}
+			bind:translate
 			{query}
 			on:clear={handleInputClear}
 		/>
