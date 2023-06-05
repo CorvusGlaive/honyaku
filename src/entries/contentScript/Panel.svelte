@@ -14,7 +14,7 @@
 	import Scrollbar from "~/lib/components/Scrollbar.svelte";
 	import TranslationServices from "~/services/TranslationServices.svelte";
 
-	const { translationApi, fontSize } = store;
+	const { translationApi } = store;
 
 	export let ref = null;
 	export let pos = { x: 0, y: 0, cx: 0, cy: 0 };

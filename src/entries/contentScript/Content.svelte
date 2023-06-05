@@ -20,11 +20,14 @@
 		isScrollbarHold = isScrollThumbHold.get();
 	}
 
-	async function handleMouseUp(e) {
+	async function handleMouseUp(e: MouseEvent) {
 		const eventPath = e.composedPath();
 		await new Promise((res) => setTimeout(res, 10));
 
-		if (["TEXTAREA", "INPUT", "VIDEO"].includes(e.target.tagName)) return;
+		if (
+			["TEXTAREA", "INPUT", "VIDEO"].includes((e.target as HTMLElement).tagName)
+		)
+			return;
 		if (eventPath.includes(buttonRef)) return;
 		if (eventPath.includes(panelRef)) return;
 		if (isScrollbarHold) return;
