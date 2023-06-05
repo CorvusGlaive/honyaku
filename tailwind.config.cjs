@@ -44,7 +44,7 @@ module.exports = {
 		fontSize,
 		extend: {
 			fontFamily: {
-				sans: ["Roboto FlexVariable", ...defaultTheme.fontFamily.sans],
+				sans: ["Roboto Flex Variable", ...defaultTheme.fontFamily.sans],
 			},
 			colors: {
 				brand: mapBrandColor(),

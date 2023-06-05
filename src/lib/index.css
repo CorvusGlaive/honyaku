@@ -1,4 +1,4 @@
-@import "@fontsource/roboto-flex/variable-full.css";
+@import "@fontsource-variable/roboto-flex/standard.css";
 
 @tailwind base;
 @tailwind components;
