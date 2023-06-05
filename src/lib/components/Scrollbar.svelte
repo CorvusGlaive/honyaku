@@ -176,7 +176,7 @@
 	<div
 		data-scrollbar
 		data-scrollbar-content
-		class="scrollbar relative h-full overflow-auto overscroll-contain {$$props.class} {containerClasses}"
+		class="scrollbar h-full overflow-auto overscroll-contain {$$props.class} {containerClasses}"
 	>
 		<slot />
 	</div>
