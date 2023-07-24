@@ -32,6 +32,7 @@
 		if (eventPath.includes(buttonRef)) return;
 		if (eventPath.includes(panelRef)) return;
 		if (isScrollbarHold) return;
+		if (shouldAutoTranslate) return (shouldAutoTranslate = false);
 
 		const selection = window.getSelection();
 		selectedText = selection.isCollapsed ? "" : selection.toString();
