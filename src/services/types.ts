@@ -1,4 +1,4 @@
-import type { ComponentType, SvelteComponentTyped } from "svelte";
+import type { ComponentType, SvelteComponent } from "svelte";
 import type { Writable } from "svelte/store";
 
 export type Service = {
@@ -10,7 +10,7 @@ export type Service = {
 export type ServiceStore<T = unknown> = Writable<Settings<T>>;
 
 export type ServiceCmp = ComponentType<
-	SvelteComponentTyped<
+	SvelteComponent<
 		{
 			query: string;
 			showResult?: (res: any) => void;
