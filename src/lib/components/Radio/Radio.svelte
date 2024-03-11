@@ -1,49 +1,65 @@
 <script lang="ts">
 	import clsx from "clsx";
-	import { getContext } from "svelte";
-	import type { Writable } from "svelte/store";
+	import { getContext, type Snippet } from "svelte";
 	import type { RadioType } from "./RadioGroup.svelte";
 
-	export let value: unknown = undefined;
-	export let group: unknown = undefined;
-	export let className: string = "";
-	export let checked = false;
+	interface Props {
+		value?: any;
+		group?: any;
+		class?: string;
+		checked?: boolean;
+		onchange?: (value: any) => void;
+		children: Snippet;
+	}
+	let {
+		value,
+		group,
+		class: className = "",
+		checked,
+		children,
+	} = $props<Props>();
 
-	const groupCtx: Writable<unknown> = getContext("group");
+	let groupCtx = getContext<{ val: any } | undefined>("group");
 	const dir = getContext<RadioType>("dir");
 
-	$: group = $groupCtx || group;
-
-	$: groupClasses = clsx(
-		group !== value && "hover:bg-surface-100 dark:hover:bg-surface-600/50",
-		// "[&:has(:checked)]:bg-brand-500 [&:has(:checked)]:text-white [&:has(:checked)]:hover:bg-brand-400", //:has doesn't work in firefox, should be available in a first half of 23.
-		group === value && "bg-brand-500 text-white hover:bg-brand-400"
+	let _group = $derived(groupCtx?.val ?? group);
+	let groupClasses = $derived(
+		clsx(
+			_group !== value && "hover:bg-surface-100 dark:hover:bg-surface-600/50",
+			// "[&:has(:checked)]:bg-brand-500 [&:has(:checked)]:text-white [&:has(:checked)]:hover:bg-brand-400", //:has doesn't work in firefox, should be available in a first half of 23.
+			_group === value && "bg-brand-500 text-white hover:bg-brand-400",
+		),
 	);
-	$: classNames = clsx(
-		"p-2",
-		"cursor-pointer",
-		"inline-flex",
-		"items-center",
-		"gap-2",
-		"transition-colors",
-		dir && groupClasses,
-		$$props.class
+	let classes = $derived(
+		clsx(
+			"p-2",
+			"cursor-pointer",
+			"inline-flex",
+			"items-center",
+			"gap-2",
+			"transition-colors",
+			dir && groupClasses,
+			className,
+		),
 	);
 
 	function handleChange() {
-		if (!groupCtx) return;
-		$groupCtx = value;
+		if (!groupCtx) {
+			group = value;
+			return;
+		}
+		group = value;
+		groupCtx.val = value;
 	}
 </script>
 
-<label class="{classNames} {className}">
+<label class={classes}>
 	<input
 		type="radio"
-		{checked}
+		checked={checked ?? value === _group}
 		{value}
-		bind:group
 		class:hidden={dir}
-		on:change={handleChange}
+		onchange={handleChange}
 	/>
-	<slot />
+	{@render children()}
 </label>

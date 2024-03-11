@@ -7,28 +7,50 @@
 		shift,
 		arrow,
 	} from "@floating-ui/dom";
+	import type { Snippet } from "svelte";
 
-	import { onMount } from "svelte";
+	interface Props {
+		trigger?: "click" | "hover";
+		position?: "top" | "bottom" | "left" | "right";
+		placement?: "center" | "start" | "end";
+		offset?: number;
+		zIndex?: number;
+		transition?: any[];
+		withArrow?: boolean;
+		arrowSize?: number;
+		open?: boolean;
+		class?: string;
+		ref: Snippet;
+		children: Snippet;
+	}
 
-	export let trigger: "click" | "hover" = "click";
-	export let position: "top" | "bottom" | "left" | "right" = "top";
-	export let placement: "center" | "start" | "end" = "center";
-	export let offset = 10;
-	export let zIndex = 10;
-	export let transition = [];
-	export let withArrow = true;
-	export let arrowSize = 8;
-	export let open = false;
+	let {
+		trigger = "click",
+		position = "top",
+		placement = "center",
+		offset = 10,
+		zIndex = 10,
+		transition = [],
+		withArrow = true,
+		arrowSize = 8,
+		open = false,
+		class: className = "",
+		ref,
+		children,
+	} = $props<Props>();
 
-	let ref: HTMLElement;
-	let triggerEl: HTMLElement;
-	let arrowEl: HTMLElement;
+	let refEl: HTMLElement | undefined = $state();
+	let triggerEl: HTMLElement | undefined = $state();
+	let arrowEl: HTMLElement | undefined = $state();
 
-	$: isClickable = trigger === "click";
-	$: if (triggerEl && ref && open) updatePopper();
+	let isClickable = $derived(trigger === "click");
 
-	onMount(() => {
-		if (!triggerEl) throw new Error("No reference element was found");
+	$effect(() => {
+		if (triggerEl && refEl && open) updatePopper();
+	});
+
+	$effect(() => {
+		if (!triggerEl) return;
 		if (triggerEl.tabIndex < 0) triggerEl.tabIndex = 0;
 
 		const events = [
@@ -38,13 +60,18 @@
 		].filter((e) => e[2]) as [string, any, boolean][];
 
 		events.forEach(([event, handler]) =>
-			triggerEl.addEventListener(event, handler)
+			triggerEl!.addEventListener(event, handler),
 		);
 		return () => {
 			events.forEach(([event, handler]) =>
-				triggerEl.removeEventListener(event, handler)
+				triggerEl!.removeEventListener(event, handler),
 			);
 		};
+	});
+
+	$effect(() => {
+		window.addEventListener("click", handleClickOutside);
+		return () => window.removeEventListener("click", handleClickOutside);
 	});
 
 	function showHandler(e: Event) {
@@ -54,14 +81,12 @@
 
 	function hideHandler() {
 		setTimeout(() => {
-			if (triggerEl?.matches(":hover") || ref?.matches(":hover")) return;
+			if (triggerEl?.matches(":hover") || refEl?.matches(":hover")) return;
 			open = false;
 		}, 100);
-		return undefined;
 	}
 
 	function getTriggerEl(node: HTMLElement) {
-		if (!$$slots.ref) throw new Error("Specify trigger element in 'ref' slot");
 		triggerEl = node.previousElementSibling as HTMLElement;
 	}
 
@@ -78,25 +103,26 @@
 	}
 
 	function updatePopper() {
-		if (!triggerEl && !ref) return;
+		if (!triggerEl && !refEl) return;
 
 		const _placement =
 			placement !== "center" ? `${position}-${placement}` : position;
 
-		computePosition(triggerEl, ref, {
+		computePosition(triggerEl!, refEl!, {
 			placement: _placement as Placement,
 			middleware: [
 				offsetM(offset),
 				flip(),
 				shift({ padding: offset }),
-				withArrow && arrow({ element: arrowEl }),
+				withArrow && arrow({ element: arrowEl! }),
 			],
 		}).then(({ x, y, placement, middlewareData }) => {
-			if (!ref) return;
-			Object.assign(ref.style, { left: `${x}px`, top: `${y}px` });
+			if (!refEl) return;
+			Object.assign(refEl.style, { left: `${x}px`, top: `${y}px` });
 
 			if (!withArrow) return;
-			const { x: arrowX, y: arrowY } = middlewareData.arrow;
+			const arrowX = middlewareData.arrow!.x;
+			const arrowY = middlewareData.arrow!.y;
 
 			const staticSide = {
 				top: "bottom",
@@ -106,7 +132,8 @@
 			}[placement.split("-")[0]];
 
 			const styleBorder = (plcmt: string) => {
-				let x: string, y: string;
+				let x = "left";
+				let y = "top";
 				if (plcmt === "top" || plcmt === "bottom")
 					(y = plcmt), (x = plcmt === "top" ? "left" : "right");
 				if (plcmt === "left" || plcmt === "right")
@@ -114,28 +141,28 @@
 				return { [`border-${x}`]: 0, [`border-${y}`]: 0 };
 			};
 
-			Object.assign(arrowEl.style, {
+			Object.assign(arrowEl!.style, {
 				left: arrowX != null ? `${arrowX}px` : "",
 				top: arrowY != null ? `${arrowY}px` : "",
 				right: "",
 				bottom: "",
-				[staticSide]: `${arrowSize / -2}px`,
+				[staticSide!]: `${arrowSize / -2}px`,
 				...styleBorder(placement.split("-")[0]),
 			});
 		});
 	}
+
 	function handleClickOutside(e: MouseEvent) {
+		if (trigger !== "click") return;
 		if (!open) return;
 
 		const path = e.composedPath();
-		if (path.filter((el) => el === ref || el === triggerEl).length) return;
+		if (path.filter((el) => el === refEl || el === triggerEl).length) return;
 		open = false;
 	}
 </script>
 
-<svelte:window on:click={trigger === "click" && handleClickOutside} />
-
-<slot name="ref" />
+{@render ref()}
 
 {#if !triggerEl}
 	<span use:getTriggerEl>contentRef</span>
@@ -143,21 +170,22 @@
 
 {#if open}
 	<span
-		bind:this={ref}
-		class="surface-2 card absolute border border-surface-200 shadow-lg dark:border-surface-600 {$$props.class}"
+		bind:this={refEl}
+		role="tooltip"
+		class="surface-2 card absolute border border-surface-200 shadow-lg dark:border-surface-600 {className}"
 		style="z-index: {zIndex}"
 		in:trans={"in"}
 		out:trans={"out"}
-		on:mouseenter={!isClickable ? showHandler : null}
-		on:mouseleave={!isClickable ? hideHandler : null}
+		onmouseenter={!isClickable ? showHandler : null}
+		onmouseleave={!isClickable ? hideHandler : null}
 	>
-		{#if arrow}
+		{#if withArrow}
 			<span
 				bind:this={arrowEl}
 				class="absolute rotate-45 bg-inherit"
 				style="z-index: {zIndex}; width: {arrowSize}px; height: {arrowSize}px; border: inherit;"
 			/>
 		{/if}
-		<slot />
+		{@render children()}
 	</span>
 {/if}

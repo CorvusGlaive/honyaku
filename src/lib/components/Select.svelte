@@ -1,16 +1,14 @@
 <script lang="ts">
-	import { createEventDispatcher } from "svelte";
 	import Fuse from "fuse.js";
 	import ChevronIcon from "../icons/ChevronIcon.svelte";
 	import Icon from "./Icon.svelte";
 	import { computePosition, size } from "@floating-ui/dom";
-	import { groupBy } from "lodash-es";
 
 	type Item = {
 		groupHeader?: string;
 		group?: string;
-		text: string;
-		value: unknown;
+		text?: string;
+		value?: unknown;
 	};
 
 	type Items =
@@ -19,46 +17,56 @@
 		| (string | number)[]
 		| { text: string; value: unknown }[];
 
-	export let id: string = "";
-	export let value: unknown;
-	export let items: Items;
+	interface Props {
+		id?: string;
+		value: unknown;
+		items: Items;
+		class?: string;
+		onchange?: (args: { id?: string; value: unknown }) => void;
+	}
+	let { id = "", value, items, class: className, onchange } = $props<Props>();
 
-	let searchItems: Item[];
-	let label = typeof value === "string" ? value : "";
-	let open = false;
+	let searchItems: Item[] = $state([]);
+	let label = $state(typeof value === "string" ? value : "");
+	let open = $state(false);
+	let selectedId = $state(0);
+	let isSelected = true;
 	let floatingEl: HTMLElement;
 	let refEl: HTMLElement;
 	let inputRef: HTMLInputElement;
-	let selectedId = 0;
-	let isSelected = true;
 
-	const dispatch = createEventDispatcher<{
-		change: { id?: string; value: any };
-	}>();
-	const fuse = new Fuse([], {
+	const fuse = new Fuse<Item>([], {
 		keys: [
 			{ name: "text", weight: 0.8 },
 			{ name: "value", weight: 0.2 },
 		],
 	});
 
-	$: flatItems = processItems(items);
-	$: value && updateLabel(value);
-	$: if (open) {
-		placeDropDown(refEl, floatingEl);
-		initSelection();
-	}
-	$: !open && onClose();
-	$: searchItems && initSelection();
-	$: fuse.setCollection(flatItems);
-	$: availableItems = searchItems || flatItems;
+	let flatItems = $derived.by(() => {
+		let fItems = processItems(items);
+		fuse.setCollection(fItems);
+		return fItems;
+	});
+	$effect(() => {
+		value && updateLabel(value);
+	});
+	$effect(() => {
+		if (open) {
+			placeDropDown(refEl, floatingEl);
+			initSelection();
+		} else onClose();
+	});
+	$effect(() => {
+		searchItems.length && initSelection();
+	});
+	let availableItems = $derived(searchItems.length ? searchItems : flatItems);
 
 	function onClose() {
 		selectedId = 0;
 		isSelected = true;
 		inputRef?.blur();
 		inputRef && (inputRef.value = label);
-		searchItems = undefined;
+		searchItems.length = 0;
 	}
 
 	function initSelection() {
@@ -82,23 +90,23 @@
 	function updateLabel(value: unknown) {
 		for (const v of flatItems) {
 			if (value !== v.value) continue;
-			label = v.text;
+			label = v.text ?? "";
 			break;
 		}
 	}
 
 	function processItems(_items: Items): Item[] {
-		let res = [];
+		let res: Item[] = [];
 		if (Array.isArray(_items) && typeof _items[0] === "object") {
 			for (const item of _items) {
-				res.push(item);
+				res.push(item as Item);
 			}
 			return res;
 		}
 
 		if (Array.isArray(_items)) {
 			for (const item of _items) {
-				res.push({ text: item, value: item });
+				res.push({ text: item as string, value: item });
 			}
 			return res;
 		}
@@ -106,22 +114,24 @@
 		for (const [group, groupItems] of Object.entries(_items)) {
 			res.push({ groupHeader: group });
 			if (typeof groupItems[0] === "object")
-				groupItems.forEach((it) => res.push({ ...it, group }));
-			else groupItems.forEach((it) => res.push({ text: it, value: it, group }));
+				(groupItems as Item[]).forEach((it) => res.push({ ...it, group }));
+			else
+				(groupItems as string[]).forEach((it) =>
+					res.push({ text: it, value: it, group }),
+				);
 		}
 		return res;
 	}
 
 	function handleSelect(e?: Event) {
-		let pos = +(e?.target as HTMLElement).dataset?.pos;
-		Number.isNaN(pos) && (pos = selectedId);
+		let pos = !e ? selectedId : Number((e.target as HTMLElement)?.dataset?.pos);
+		if (Number.isNaN(pos)) return;
 		let _value = availableItems[pos]?.value;
 		if (!_value) return;
 
 		isSelected = true;
 		open = false;
-		value = _value;
-		dispatch("change", {
+		onchange?.({
 			id,
 			value: _value,
 		});
@@ -148,22 +158,23 @@
 		const target = e.target as HTMLInputElement;
 
 		if (isSelected) {
-			target.value = (e as InputEvent).data;
+			target.value = (e as InputEvent).data ?? "";
 			isSelected = false;
 		}
 
 		if (target.value.length === 0) {
-			searchItems = undefined;
+			searchItems.length = 0;
 			return;
 		}
 
 		let search = fuse.search(target.value).map((it) => it.item);
 		searchItems = search?.[0]?.group
-			? processItems(groupBy(search, "group"))
+			? processItems(Object.groupBy(search, ({ group }) => group) as Items)
 			: search;
 	}
 
 	function handleKeyDown(e: KeyboardEvent) {
+		if ("__root" in e) return;
 		switch (e.code) {
 			case "Escape":
 				e.preventDefault();
@@ -196,19 +207,22 @@
 
 <div
 	use:clickOutside={() => (open = false)}
-	class="surface-2 card divide-y outline-none ring-2 ring-transparent transition-shadow {$$props.class} relative"
+	class="surface-2 card divide-y outline-none ring-2 ring-transparent transition-shadow {className} relative"
 	class:rounded-b-none={open}
 >
 	<!-- svelte-ignore a11y-click-events-have-key-events -->
+	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<div
 		bind:this={refEl}
-		on:click={() => (open = true)}
+		onclick={(e) => {
+			e.target === inputRef ? (open = true) : (open = !open);
+		}}
 		class="inline-flex items-center pr-2"
 	>
 		<input
 			bind:this={inputRef}
-			on:keydown={handleKeyDown}
-			on:input={handleSearch}
+			onkeydown={handleKeyDown}
+			oninput={handleSearch}
 			class="w-full bg-transparent px-2 py-1.5 outline-none"
 			type="text"
 			value={label}
@@ -217,12 +231,13 @@
 	</div>
 	<!-- svelte-ignore a11y-click-events-have-key-events -->
 	<!-- svelte-ignore a11y-mouse-events-have-key-events -->
+	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<div
 		bind:this={floatingEl}
 		class="select surface-2 scrollbar absolute left-1/2 z-10 grid max-h-80 w-full -translate-x-1/2 gap-1 overflow-auto rounded-b-md p-2 py-2 shadow-md"
 		class:hidden={!open}
-		on:click={handleSelect}
-		on:mouseover={handleMouseOver}
+		onclick={handleSelect}
+		onmouseover={handleMouseOver}
 	>
 		{#each availableItems as item, i}
 			{#if item.groupHeader}

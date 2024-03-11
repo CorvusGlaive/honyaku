@@ -1,10 +1,10 @@
 import { colord, extend } from "colord";
 import a11yPlugin from "colord/plugins/a11y";
 import mixPlugin from "colord/plugins/mix";
-import { onMount } from "svelte";
 import twColors from "tailwindcss/colors";
+import type { DefaultColors } from "tailwindcss/types/generated/colors";
 import { getRootElement } from "~/lib/utils";
-import { store } from "~/store";
+import { store } from "~/store.svelte";
 
 extend([mixPlugin, a11yPlugin]);
 
@@ -12,18 +12,17 @@ type Palette = {
 	[K in keyof (typeof twColors)["blue"]]: string;
 };
 
-export default () =>
-	onMount(() => {
-		const unsub = store.accentColor.subscribe((color) => {
-			let colors = twColors[color];
-			if (!colors && colord(color).isValid()) {
-				colors = generatePalette(color);
-			}
-			applyColorPalette(colors);
-		});
-
-		return unsub;
+export default () => {
+	$effect(() => {
+		let colors = twColors[
+			store.accentColor.val as keyof DefaultColors
+		] as Palette;
+		if (!colors && colord(store.accentColor.val).isValid()) {
+			colors = generatePalette(store.accentColor.val);
+		}
+		applyColorPalette(colors);
 	});
+};
 
 export function generatePalette(color: string): Palette {
 	const _color = colord(color);
@@ -41,7 +40,7 @@ export function generatePalette(color: string): Palette {
 	];
 
 	return colors.reduce((acc, cur, i) => {
-		const index = i === 0 ? 50 : i * 100;
+		const index = (i === 0 ? 50 : i * 100) as any as keyof Palette;
 		acc[index] = cur;
 		return acc;
 	}, {} as Palette);

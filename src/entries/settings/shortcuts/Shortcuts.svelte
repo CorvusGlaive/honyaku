@@ -1,24 +1,20 @@
 <script lang="ts">
 	import Section from "~/lib/components/Section.svelte";
 	import ShortcutInput from "./ShortcutInput.svelte";
-	import { keymaps, setKey, resetKey } from "~/lib/keymapps";
-	import type { ComponentEvents } from "svelte";
+	import { setKey, resetKey } from "~/lib/keymapps";
+	import { store } from "~/store.svelte";
 
-	function handleChange(
-		group: string,
-		action: string,
-		e: ComponentEvents<ShortcutInput>["change"]
-	) {
-		console.log("shortcuts:handleChange", `${group}-${action}`, e.detail);
-		if (!e.detail) return;
-		setKey(e.detail, action, group);
-	}
+	const keymaps = $derived.by(
+		() =>
+			Object.entries(store.keymaps.val).map(([group, actions]) => [
+				group,
+				Object.entries(actions),
+			]) as [group: string, actions: [id: string, keys: [string, string]][]][],
+	);
 
-	function handleReset(group: string, action: string) {
-		const path = `${group}_${action}`;
-		console.log("shortcuts:handleReset", path);
-
-		resetKey(action, group);
+	function handleChange(group: string, action: string, key: string) {
+		if (!key) return;
+		setKey(key, action, group);
 	}
 
 	function splitString(str: string): string {
@@ -30,7 +26,7 @@
 	}
 </script>
 
-{#each $keymaps as [group, maps] (group)}
+{#each keymaps as [group, maps] (group)}
 	<Section title={group} class="w-1/2">
 		{#each maps as [action, keys] (action)}
 			<!-- svelte-ignore a11y-label-has-associated-control -->
@@ -38,8 +34,8 @@
 				<span>{splitString(action)}</span>
 				<ShortcutInput
 					{keys}
-					on:change={(e) => handleChange(group, action, e)}
-					on:reset={() => handleReset(group, action)}
+					onchange={(e) => handleChange(group, action, e)}
+					onreset={() => resetKey(action, group)}
 				/>
 			</label>
 		{/each}

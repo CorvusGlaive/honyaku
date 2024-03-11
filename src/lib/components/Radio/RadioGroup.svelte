@@ -1,3 +1,5 @@
+<svelte:options runes={true} />
+
 <script lang="ts" context="module">
 	export type RadioType = "hor" | "ver";
 </script>
@@ -5,49 +7,74 @@
 <script lang="ts">
 	import clsx from "clsx";
 
-	import { createEventDispatcher, setContext } from "svelte";
-	import { writable } from "svelte/store";
+	import { setContext, untrack, type Snippet } from "svelte";
 	import Radio from "./Radio.svelte";
 
-	interface $$slots {
-		default: { item: { label: string; value: string } };
+	interface Props {
+		value?: any;
+		items?: { label: string; value: any }[];
+		dir?: RadioType;
+		class?: string;
+		block?: boolean;
+		onchange?: (value: any) => void;
+		custom?: Snippet<[{ label: string; value: string }]>;
+		children?: Snippet;
 	}
-	const dispatch = createEventDispatcher();
 
-	export let value: any = undefined;
-	export let dir: RadioType = "hor";
-	export let block = false;
-	export let items: { label: string; value: string }[] = undefined;
+	let {
+		value,
+		items,
+		dir = "hor",
+		block,
+		class: className,
+		onchange,
+		custom,
+		children,
+	} = $props<Props>();
 
-	const group = writable(value);
-	setContext("group", group);
+	let group = $state(value);
+	setContext("group", {
+		get val() {
+			return group;
+		},
+		set val(v) {
+			group = v;
+		},
+	});
 	setContext("dir", dir);
 
-	$: {
-		value = $group;
-		dispatch("change", $group);
-	}
+	$effect(() => {
+		let v = untrack(() => value);
+		if (v !== group) onchange?.(group);
+	});
+	$effect(() => {
+		let g = untrack(() => group);
+		if (value === g) return;
+		group = value;
+	});
 
 	const buttonClasses = "grid-flow-col divide-x";
 	const listClasses = "divide-y";
-	const classNames = clsx(
+	const classes = clsx(
 		"surface-2 card overflow-hidden",
 		"leading-normal",
 		block ? "grid" : "inline-grid",
 		dir === "ver" && listClasses,
 		dir === "hor" && buttonClasses,
-		$$props.class
+		className,
 	);
 </script>
 
-<fieldset class={classNames}>
-	{#if items?.length > 0}
+<fieldset class={classes}>
+	{#if items}
 		{#each items as item}
-			<slot {item}>
-				<Radio bind:group={value} value={item.value}>{item.label}</Radio>
-			</slot>
+			{#if custom}
+				{@render custom(item)}
+			{:else}
+				<Radio value={item.value}>{item.label}</Radio>
+			{/if}
 		{/each}
-	{:else}
-		<slot item={{ label: "NONE", value: "NONE" }} />
+	{:else if children}
+		{@render children()}
 	{/if}
 </fieldset>

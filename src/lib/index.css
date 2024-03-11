@@ -38,6 +38,7 @@
 @layer components {
 	.scrollbar {
 		scrollbar-color: rgb(var(--brand-300)) white;
+		scrollbar-width: thin;
 
 		.dark & {
 			scrollbar-color: rgb(var(--brand-300)) black;

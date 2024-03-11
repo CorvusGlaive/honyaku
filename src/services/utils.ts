@@ -1,66 +1,42 @@
-import { store } from "~/store";
-import { derived, type Readable } from "svelte/store";
+import { store } from "~/store.svelte";
 import type {
 	ServiceColor,
 	Settings,
-	ServiceStore,
 	ServiceCmp,
 	ServiceConfig,
 } from "./types";
 import { colord } from "colord";
 import colors from "tailwindcss/colors";
-import { defaultsDeep } from "lodash-es";
+import type { DefaultColors } from "tailwindcss/types/generated/colors";
 
-export const serversCfgs = [];
+export const serversCfgs: any[] = [];
 
 export function createServiceStore<T extends Settings>(
 	name: string,
-	initialValue: T
+	initialValue: T,
 ) {
-	const storedService = store.services.get()[name];
+	const storedService = store.services.val[name];
 	if (!storedService) {
-		store.services.update((s) => {
-			s[name] = initialValue;
-			return s;
-		});
-	} else {
-		initialValue = defaultsDeep(storedService, initialValue) as T;
+		store.services.val[name] = initialValue;
 	}
 
-	const { subscribe } = derived(
-		store.services,
-		($services) =>
-			(initialValue = defaultsDeep($services[name], initialValue) as T)
-	) as Readable<T>;
-
-	const get = () => initialValue;
-
-	const set = (value: T) => {
-		console.log(
-			"%cSERVICE_SETTING:" + name + "::SET ->",
-			"color: mediumspringgreen; font-size:14px;",
-			value
-		);
-		initialValue = value = defaultsDeep(value, initialValue);
-		store.services.update((s) => {
-			s[name] = value;
-			return s;
-		});
+	return {
+		get val() {
+			return store.services.val[name] as T;
+		},
+		set val(value: T) {
+			store.services.val[name] = value;
+		},
 	};
-
-	const update = (fn: (store: T) => T) =>
-		set(fn(store.services.get()[name] as T));
-
-	return { get, set, update, subscribe };
 }
 
 export function prepareService<T extends ServiceCmp>(service: T) {
 	const config = serversCfgs.shift();
 
 	return {
-		name: config.name as string,
+		name: config!.name,
 		component: service,
-		store: config.store as ServiceStore<any>,
+		store: config!.store,
 	};
 }
 
@@ -79,12 +55,12 @@ export function initService<T extends ServiceConfig>(config: T) {
 	};
 }
 
-function parseColor(color: string | null) {
+function parseColor(color: string | null | undefined) {
 	if (color?.[0] !== "#") {
-		color = colors[color]["400"];
+		color = colors[color as keyof DefaultColors]["400"];
 	}
 	color ??= colord(
-		`hsl(${Math.trunc(Math.random() * 360)}, 100%, 50%)`
+		`hsl(${Math.trunc(Math.random() * 360)}, 100%, 50%)`,
 	).toHex();
 
 	return color as ServiceColor;

@@ -1,34 +1,45 @@
 <script lang="ts">
 	import clsx from "clsx";
 
-	import { createEventDispatcher, onMount } from "svelte";
 	import CloseIcon from "../icons/CloseIcon.svelte";
 	import SendIcon from "../icons/SendIcon.svelte";
 	import Button from "./Button.svelte";
 	import Icon from "./Icon.svelte";
-	import { tick } from "svelte";
-	import type { HTMLAttributes } from "svelte/elements";
+	import { tick, type Snippet } from "svelte";
+	import type { HTMLInputAttributes } from "svelte/elements";
 
-	interface $$Props extends HTMLAttributes<HTMLInputElement> {
+	interface Props extends HTMLInputAttributes {
 		value?: string;
 		autofocus?: boolean;
 		isMainInput?: boolean;
 		type?: "text" | "search" | "color";
 		ref?: HTMLInputElement;
+		left?: Snippet;
+		children?: Snippet;
+		onclear?: () => void;
+		onsend?: () => void;
 	}
 
-	export let value = "";
-	export let autofocus = false;
-	export let isMainInput = false;
-	export let type: $$Props["type"] = "text";
+	let {
+		value = "",
+		autofocus = false,
+		isMainInput = false,
+		type = "text",
+		ref = undefined,
+		class: className = "",
+		left,
+		children,
+		onclear,
+		onsend,
+		...props
+	} = $props<Props>();
 
-	export let ref: HTMLInputElement = null;
+	$effect(() => {
+		type === "search" && ref && (ref.value = value);
+	});
 
-	const dispatch = createEventDispatcher();
-	$: type === "search" && ref && (ref.value = value);
-
-	onMount(() => {
-		autofocus && ref.focus();
+	$effect(() => {
+		autofocus && ref?.focus();
 	});
 
 	const defaultCss = clsx(
@@ -43,7 +54,7 @@
 		"ring-transparent",
 		"transition-shadow",
 		"focus:ring-brand-400",
-		$$props.class
+		className,
 	);
 
 	const searchInputCss = clsx(
@@ -52,7 +63,7 @@
 		"px-2",
 		"py-1.5",
 		"outline-none",
-		$$props.class
+		className,
 	);
 
 	const searchCss = clsx(
@@ -65,20 +76,8 @@
 		"transition-all",
 		"overflow-hidden",
 		"focus-within:ring-brand-400",
-		$$props.class
+		className,
 	);
-
-	// Hack around Wanakana.bind for Firefox, which doesn't update value if there is two-way bindings
-	function bindValue(node: HTMLInputElement) {
-		const handler = (e: InputEvent) =>
-			(value = (e.target as HTMLInputElement).value);
-		node.addEventListener("keyup", handler);
-		return {
-			destroy() {
-				node.removeEventListener("keyup", handler);
-			},
-		};
-	}
 </script>
 
 {#if type === "text"}
@@ -87,31 +86,27 @@
 		bind:value
 		class={defaultCss}
 		data-is-main-input={isMainInput}
-		on:change
-		on:input
-		on:keydown
-		on:keyup
 		type="text"
+		{...props}
 	/>
-{/if}
-
-{#if type === "search"}
+{:else if type === "search"}
 	<div class={searchCss}>
-		<slot name="left" />
+		{#if left}
+			{@render left()}
+		{/if}
 		<input
 			type="text"
 			bind:this={ref}
-			use:bindValue
+			bind:value
 			class={searchInputCss}
 			data-is-main-input={isMainInput}
-			on:change
-			on:input
-			on:keydown
-			on:keyup
+			{...props}
 		/>
-		<slot />
+		{#if children}
+			{@render children()}
+		{/if}
 		{#if value}
-			<Button icon className="p-2" on:click={() => dispatch("clear")}>
+			<Button icon class="p-2" onclick={onclear}>
 				<Icon title="Clear input field">
 					<CloseIcon variant="outline" />
 				</Icon>
@@ -119,36 +114,39 @@
 		{/if}
 		<Button
 			icon
-			on:click={() => dispatch("send")}
-			className="p-2 bg-surface-100 hover:!bg-brand-300 hover:!text-brand-900 border-l !border-l-surface-500/10 dark:bg-surface-700"
+			onclick={onsend}
+			class="border-l !border-l-surface-500/10 bg-surface-100 p-2 hover:!bg-brand-300 hover:!text-brand-900 dark:bg-surface-700"
 		>
 			<Icon><SendIcon /></Icon>
 		</Button>
 	</div>
-{/if}
-
-{#if type === "color"}
+{:else if type === "color"}
 	<!-- svelte-ignore a11y-click-events-have-key-events -->
 	<div
-		class="card surface-2 inline-flex items-center justify-between gap-2 p-1 {$$props.class ||
-			''}"
+		class="card surface-2 inline-flex items-center justify-between gap-2 p-1 {className}"
 	>
 		<input
 			type="text"
 			spellcheck="false"
 			{value}
-			on:change={async (e) => {
+			onchange={async (e) => {
 				value = e.currentTarget.value;
 				await tick();
-				ref.dispatchEvent(new Event("change"));
+				ref?.dispatchEvent(new Event("change"));
 			}}
 			class="w-[7ch] bg-transparent font-mono leading-none outline-none"
 		/>
-		<div
-			class="h-[1.36em] w-[1.36em] rounded"
+		<button
+			class="size-[1.36em] rounded"
 			style="background-color: {value || 'black'};"
-			on:click={() => ref.showPicker()}
+			onclick={() => ref?.showPicker()}
 		/>
-		<input type="color" class="hidden" bind:this={ref} bind:value on:change />
+		<input
+			type="color"
+			class="hidden"
+			bind:this={ref}
+			bind:value
+			onchange={props.onchange}
+		/>
 	</div>
 {/if}

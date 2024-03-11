@@ -1,24 +1,23 @@
 import type { ComponentType, SvelteComponent } from "svelte";
-import type { Writable } from "svelte/store";
 
 export type Service = {
 	name: string;
 	component: ServiceCmp;
-	store: ServiceStore;
 };
 
-export type ServiceStore<T = unknown> = Writable<Settings<T>>;
-
 export type ServiceCmp = ComponentType<
-	SvelteComponent<
-		{
-			query: string;
-			showResult?: (res: any) => void;
-			translate?: (query: string) => void;
-		},
-		{ clear: CustomEvent }
-	>
+	SvelteComponent<{
+		query: string;
+		showResult?: (res: any) => void;
+		translate?: (query: string) => void;
+		onclear?: () => void;
+	}>
 >;
+
+export interface ServiceProps {
+	query: string;
+	onclear?: () => void;
+}
 
 export type ServiceConfig = {
 	name: string;

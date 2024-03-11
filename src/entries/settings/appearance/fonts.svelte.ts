@@ -1,14 +1,12 @@
-import { onMount } from "svelte";
 import { getRootElement } from "~/lib/utils";
-import { store } from "~/store";
-import type { StoreType } from "~/store";
+import { store } from "~/store.svelte";
+import type { StoreType } from "~/store.svelte";
 
-export default () =>
-	onMount(() => {
-		return store.fontSize.subscribe((size) => {
-			applyFontSize(getFontSize(size));
-		});
+export default () => {
+	$effect(() => {
+		applyFontSize(getFontSize(store.fontSize.val));
 	});
+};
 
 function getFontSize(size: StoreType<"fontSize">): number {
 	switch (size) {

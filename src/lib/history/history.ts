@@ -1,6 +1,6 @@
 import { runtime } from "webextension-polyfill";
 import { db } from "../db";
-import { getActiveTab, isContentScript } from "../utils";
+import { getActiveTab, isContentScript, sendMessageRuntime } from "../utils";
 
 /**
  * A history entry.
@@ -22,8 +22,7 @@ export interface IHistoryDB {
 }
 
 export async function addHistory(entry: HistoryEntry) {
-	if (isContentScript())
-		return runtime.sendMessage({ type: "addHistory", data: entry });
+	if (isContentScript()) return sendMessageRuntime("addHistory", entry);
 
 	const [url, ...restInfo] = await getTabInfo();
 	entry.time ??= Date.now();

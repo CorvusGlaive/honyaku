@@ -1,6 +1,4 @@
-import { merge, set } from "lodash-es";
-import { derived } from "svelte/store";
-import { store } from "~/store";
+import { store } from "~/store.svelte";
 
 export type KeymapStore = [defaultKey: string, changedKey?: string];
 export type KeymapsStore = {
@@ -15,35 +13,31 @@ type Options = {
 	condition?: () => boolean;
 };
 
-let savedKeys: KeymapsStore = {};
-let keysBatchUpdate: KeymapsStore = {};
-
 export function registerKeymaps(
 	mappings: Keymaps | (() => Keymaps),
-	{ group = "other", condition }: Options
+	{ group = "other", condition }: Options,
 ) {
 	mappings = typeof mappings === "function" ? mappings() : mappings;
 	if (!mappings) throw Error("Provide key mappings!");
 
-	log({ group, condition, mappings });
-	savedKeys = store.keymaps.get();
-
 	return getHandler(parseMappings(mappings, group), condition);
 }
 
-export const keymaps = derived(store.keymaps, ($keys) => {
-	savedKeys = $keys;
-	return Object.entries($keys).map(([group, actions]) => [
-		group,
-		Object.entries(actions),
-	]) as [group: string, actions: [id: string, keys: [string, string]][]][];
-});
+export const keymaps = {
+	get val() {
+		return Object.entries(store.keymaps.val).map(([group, actions]) => [
+			group,
+			Object.entries(actions),
+		]) as [group: string, actions: [id: string, keys: [string, string]][]][];
+	},
+};
 
 const isAlpha = (char: string) => char >= "A" && char <= "z";
+
 function parseMappings(
 	maps: Keymaps,
-	group: string
-): Record<string, KeyHandler> {
+	group: string,
+): Record<string, Record<string, KeyHandler>> {
 	const keyMaps = {};
 
 	for (let [keys, id] of Object.entries(maps)) {
@@ -52,41 +46,25 @@ function parseMappings(
 			id = id[1];
 		}
 		const _keys = keys.split("-");
-		let key = _keys.pop();
+		let key = _keys.pop()!;
 		let mod = _keys.sort().join("") || "n";
 
 		if (key.length === 1) {
 			key = `${isAlpha(key) ? "Key" : "Digit"}${key.toUpperCase()}`;
 		}
 
-		set(keyMaps, [mod, key], id);
+		objectSet(keyMaps, [mod, key], id);
 	}
-
-	log("parseMappings:keyMaps:", keyMaps);
-
-	if (Object.keys(keysBatchUpdate).length) saveKeys();
 
 	return keyMaps;
 }
 
 function getKey(key: string, id: string, group: string = "other"): string {
-	const savedKey = savedKeys?.[group]?.[id] || keysBatchUpdate?.[group]?.[id];
-
-	log("getKey", {
-		key,
-		id,
-		group,
-		savedKey,
-		savedKeys,
-		keysButchUpdate: keysBatchUpdate,
-	});
+	const savedKey = store.keymaps.val?.[group]?.[id];
 
 	if (!savedKey) {
-		set(keysBatchUpdate, [group, id], [key]);
-	} else {
-		log("getKey->found saved key", { group, id, key, savedKey }, savedKeys);
+		objectSet(store.keymaps.val, [group, id], [key]);
 	}
-
 	return savedKey?.[1] || key;
 }
 
@@ -99,29 +77,13 @@ export function resetKey(id: string, group: string) {
 }
 
 function _setKey(key: string | null, id: string, group: string) {
-	log("_setKey", {
-		savedKeys,
-		keysButchUpdate: keysBatchUpdate,
-		group,
-		id,
-		key,
-	});
-	if (!savedKeys?.[group]?.[id])
-		return log("_setKey", "there's no such a key in the store!");
-
-	store.keymaps.update((s) => {
-		set(s, [group, id, 1], key);
-		return s;
-	});
-}
-
-function saveKeys() {
-	store.keymaps.update((s) => merge(s, keysBatchUpdate));
+	if (!store.keymaps.val?.[group]?.[id]) return;
+	objectSet(store.keymaps.val, [group, id, 1], key);
 }
 
 function getHandler(
-	keys: Record<string, KeyHandler>,
-	condition: () => boolean
+	keys: Record<string, Record<string, KeyHandler>>,
+	condition?: () => boolean,
 ): KeyHandler {
 	return (e: KeyboardEvent) => {
 		if (["Control", "Shift", "Alt"].includes(e.key)) return;
@@ -159,11 +121,15 @@ function getHandler(
 	};
 }
 
-function log(...args: any): void {
-	return;
-	console.log(
-		"%cregisterKeymaps:",
-		"color: palevioletred; font-size: 16px; font-weight:bold;",
-		...args
-	);
+function objectSet(obj: object, path: (string | number)[], value: any) {
+	let o = obj as any;
+	path.forEach((key, i) => {
+		let newVal = value;
+		if (i !== path.length - 1) {
+			if (!(key in o)) newVal = typeof path[i + 1] === "number" ? [] : {};
+			else newVal = o[key];
+		}
+		o[key] = newVal;
+		o = o[key];
+	});
 }

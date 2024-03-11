@@ -1,33 +1,39 @@
 <script context="module" lang="ts">
-	import { writableStore } from "~/lib/utils";
-
-	export const isScrollThumbHold = writableStore(false);
+	let _isScrollThumbHold = $state(false);
+	export let isScrollThumbHold = () => _isScrollThumbHold;
 </script>
 
 <script lang="ts">
-	import { pick } from "lodash-es";
-
-	import { onMount } from "svelte";
 	import { isContentScript } from "../utils";
 	import { runtime } from "webextension-polyfill";
+	import type { Snippet } from "svelte";
 
-	export let containerClasses = "";
+	let {
+		containerClasses = "",
+		class: className = "",
+		children,
+	} = $props<{
+		containerClasses?: string;
+		class?: string;
+		children: Snippet;
+	}>();
 
 	const isFirefox = getBrowser() === "firefox";
 
 	let container: HTMLDivElement;
 	let scrollThumb: HTMLDivElement;
-	let thumbHeight = 0;
-	let thumbTop = 0;
-	let isScrollbarHover = false;
-	let isThumbHold = false;
+	let thumbHeight = $state(0);
+	let thumbTop = $state(0);
+	let isScrollbarHover = $state(false);
+	let isThumbHold = $state(false);
 	let thumbPageY = 0;
 	let ctrStartScrollTop = 0;
-	let ctrScrollTop = 0;
 	let htmlStyles: { cursor: string; pointerEvents: string; userSelect: string };
 
-	$: toggleCursorStyles(isThumbHold);
-	$: isScrollThumbHold.set(isThumbHold);
+	$effect(() => {
+		toggleCursorStyles(isThumbHold);
+		_isScrollThumbHold = isThumbHold;
+	});
 
 	function toggleCursorStyles(cond: boolean) {
 		if (!isContentScript()) {
@@ -35,12 +41,13 @@
 		}
 
 		const html = document.documentElement;
-		!htmlStyles &&
-			(htmlStyles = pick(html.style, [
-				"cursor",
-				"pointerEvents",
-				"userSelect",
-			]));
+		if (!htmlStyles) {
+			htmlStyles = {
+				cursor: html.style.cursor,
+				pointerEvents: html.style.pointerEvents,
+				userSelect: html.style.userSelect,
+			};
+		}
 
 		if (cond) {
 			html.style.setProperty("cursor", "default", "important");
@@ -56,29 +63,29 @@
 		});
 	}
 
-	onMount(() => {
+	$effect(() => {
 		if (isFirefox) return;
 		let resizeObserver = new ResizeObserver(resizeThumb);
 		let mutationObserver = new MutationObserver((mutationList) => {
-			let addedElements = [];
-			let removedElements = [];
+			let addedElements: HTMLElement[] = [];
+			let removedElements: HTMLElement[] = [];
 			for (const mut of mutationList) {
 				addedElements.push(
 					...[].filter.call(
 						mut.addedNodes,
-						(node) => node instanceof HTMLElement
-					)
+						(node) => (node as Node) instanceof HTMLElement,
+					),
 				);
 				removedElements.push(
 					...[].filter.call(
 						mut.removedNodes,
-						(node) => node instanceof HTMLElement
-					)
+						(node) => (node as Node) instanceof HTMLElement,
+					),
 				);
 			}
 			removedElements.forEach((el) => resizeObserver.unobserve(el));
 			addedElements.forEach((el) =>
-				resizeObserver.observe(el, { box: "border-box" })
+				resizeObserver.observe(el, { box: "border-box" }),
 			);
 			resizeThumb();
 		});
@@ -96,18 +103,21 @@
 	});
 
 	function resizeThumb() {
+		if (!container) return;
 		const { scrollHeight, clientHeight } = container;
 		if (clientHeight === scrollHeight) {
 			thumbHeight = 0;
 			return;
 		}
-		thumbHeight = (clientHeight / scrollHeight) * clientHeight;
+		thumbHeight = Math.max(
+			(clientHeight / scrollHeight) * clientHeight,
+			clientHeight * 0.1,
+		);
 		handleScroll();
 	}
 
 	function handleScroll() {
 		thumbTop = (container.scrollTop / container.scrollHeight) * 100;
-		ctrScrollTop = container.scrollTop;
 	}
 
 	function handleThumbMouseDown(e: MouseEvent) {
@@ -116,9 +126,10 @@
 		ctrStartScrollTop = container.scrollTop;
 	}
 
-	let isTrackThrottle = false;
+	let isTrackHold = false;
 	function handleScrollbarClick(e: MouseEvent) {
-		if (isTrackThrottle) return;
+		if (isThumbHold) return;
+		isTrackHold = true;
 
 		const evtOffsetY = e.clientY - container.getBoundingClientRect().top;
 
@@ -128,20 +139,31 @@
 		)
 			return;
 
-		isTrackThrottle = true;
 		container.scrollBy({
 			top:
 				(evtOffsetY > scrollThumb.offsetTop ? 1 : -1) * container.clientHeight,
 			behavior: "smooth",
 		});
-		setTimeout(() => {
-			isTrackThrottle = false;
-			handleScrollbarClick(e);
-		}, 300);
+		setTimeout(scrollOnHold, 300, evtOffsetY);
+	}
+
+	function scrollOnHold(offsetY = 0) {
+		if (!isTrackHold) return;
+		const top = scrollThumb.offsetTop;
+		const bot = scrollThumb.offsetTop + scrollThumb.offsetHeight;
+		if (offsetY > top && offsetY < bot) return;
+		let dir = offsetY > top ? 1 : -1;
+
+		container.scrollBy({
+			top: dir * container.clientHeight * 0.5,
+		});
+
+		setTimeout(scrollOnHold, 10, offsetY);
 	}
 
 	function handleWindowMouseup(_e: MouseEvent) {
 		if (isThumbHold) isThumbHold = false;
+		if (isTrackHold) isTrackHold = false;
 	}
 
 	function handleWindowMouseMove(e: MouseEvent) {
@@ -168,36 +190,37 @@
 </script>
 
 <svelte:window
-	on:mouseup={(e) => !isFirefox && handleWindowMouseup(e)}
-	on:mousemove={(e) => !isFirefox && handleWindowMouseMove(e)}
+	onmouseup={(e) => !isFirefox && handleWindowMouseup(e)}
+	onmousemove={(e) => !isFirefox && handleWindowMouseMove(e)}
 />
 
 {#if isFirefox}
 	<div
 		data-scrollbar
 		data-scrollbar-content
-		class="scrollbar h-full overflow-auto overscroll-contain {$$props.class} {containerClasses}"
+		class="scrollbar h-full overflow-auto overscroll-contain {className} {containerClasses}"
 	>
-		<slot />
+		{@render children()}
 	</div>
 {:else}
-	<div data-scrollbar class="relative h-full {$$props.class}">
+	<div data-scrollbar class="relative h-full {className}">
 		<div
 			bind:this={container}
 			data-scrollbar-content
 			class="hide-scrollbar h-full overflow-auto overscroll-contain {containerClasses}"
-			on:scroll={handleScroll}
+			onscroll={handleScroll}
 		>
-			<slot />
+			{@render children()}
 		</div>
 		<!-- svelte-ignore a11y-mouse-events-have-key-events -->
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
+		<!-- svelte-ignore a11y-no-static-element-interactions -->
 		{#if thumbHeight > 0}
 			<div
 				data-scrollbar-track
-				on:mousedown={handleScrollbarClick}
-				on:mouseover={() => (isScrollbarHover = true)}
-				on:mouseleave={() => (isScrollbarHover = false)}
+				onmousedown={handleScrollbarClick}
+				onmouseover={() => (isScrollbarHover = true)}
+				onmouseleave={() => (isScrollbarHover = false)}
 				class="absolute right-0 top-0 z-[99] h-full w-3 rounded-md"
 			>
 				<div
@@ -210,7 +233,7 @@
 					<div
 						data-scrollbar-thumb
 						bind:this={scrollThumb}
-						on:mousedown={handleThumbMouseDown}
+						onmousedown={handleThumbMouseDown}
 						class="relative h-1 scale-y-95 [&>*]:bg-brand-300 [&>*]:hover:bg-brand-400 [&>*]:active:bg-brand-600"
 						style="height: {thumbHeight}px; top: {thumbTop}%;"
 					>

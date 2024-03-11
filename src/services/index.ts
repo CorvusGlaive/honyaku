@@ -1,5 +1,4 @@
-import { derived } from "svelte/store";
-import { store } from "~/store";
+import { store } from "~/store.svelte";
 import services from "./services";
 
 export type { Service, Settings } from "./types";
@@ -8,7 +7,7 @@ class Translation {
 	#services = services;
 
 	get services() {
-		const services = store.services.get();
+		const services = store.services.val;
 		return this.#services.filter((s) => services[s.name]?.enabled ?? s);
 	}
 
@@ -21,14 +20,8 @@ class Translation {
 	}
 
 	getCurrentService() {
-		const currentService = store.translationApi.get();
+		const currentService = store.translationApi.val;
 		return this.getServiceByName(currentService);
-	}
-
-	currentService() {
-		return derived(store.translationApi, ($name: string) =>
-			this.getServiceByName($name)
-		);
 	}
 }
 

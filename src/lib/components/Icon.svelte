@@ -1,22 +1,38 @@
 <script lang="ts">
-	import { store } from "~/store";
+	import type { Snippet } from "svelte";
+	import { store } from "~/store.svelte";
 
-	/**
+	interface Props {
+		/**
 If you pass `number`, it'll be used as px scaled according to the `fontsize` settings.
 Use `string` if you want to use other units e.g `12em`.
 Pass `false` if you don't want to set size directly.
 	*/
-	export let size: number | string | boolean = 16;
-	export let className = "";
-	export let viewBox: number | string = 32;
-	export let title = "";
-	export let color = "currentColor";
+		size?: number | string | boolean;
+		class?: string;
+		viewBox?: number | string;
+		title?: string;
+		color?: string;
+		children: Snippet;
+	}
+	let {
+		size = 16,
+		class: className = "",
+		viewBox = 32,
+		title = "",
+		color = "currentColor",
+		children,
+	} = $props<Props>();
 
 	let svg: SVGElement;
 
-	$: vbSize =
-		typeof viewBox === "number" ? `0 0 ${viewBox} ${viewBox}` : viewBox;
-	$: svg && resize(size);
+	let vbSize = $derived(
+		typeof viewBox === "number" ? `0 0 ${viewBox} ${viewBox}` : viewBox,
+	);
+
+	$effect(() => {
+		svg && resize(size);
+	});
 
 	function resize(size: number | string | boolean) {
 		if (typeof size === "boolean") return;
@@ -25,7 +41,7 @@ Pass `false` if you don't want to set size directly.
 			return;
 		}
 
-		let fs: string | number = store.fontSize.get();
+		let fs: string | number = store.fontSize.val;
 		fs = fs === "medium" ? 16 : fs === "small" ? 14 : 18;
 		fs = fs / 16;
 		Object.assign(svg.style, {
@@ -40,6 +56,6 @@ Pass `false` if you don't want to set size directly.
 		<title>{title}</title>
 	{/if}
 	<g fill={color}>
-		<slot />
+		{@render children()}
 	</g>
 </svg>

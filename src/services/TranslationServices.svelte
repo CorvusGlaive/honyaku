@@ -2,37 +2,43 @@
 	import Icon from "~/lib/components/Icon.svelte";
 	import srv, { type Service } from "~/services";
 	import type { HistoryEntry } from "~/lib/history";
-	import { store } from "~/store";
+	import { store } from "~/store.svelte";
 	import { i18n, runtime } from "webextension-polyfill";
-	import { onMount, tick } from "svelte";
+	import { tick } from "svelte";
 
-	export let selectedText = "";
-	export let shouldAutoTranslate = false;
+	let { selectedText = "", shouldAutoTranslate = false } = $props();
 
 	const { translationApi } = store;
 
-	let selectedHistory: HistoryEntry = undefined;
-	let service: Service = null;
+	let query = $state("");
+	let selectedHistory: HistoryEntry | undefined = $state();
+	let service: Service | undefined = $state();
 	let isShowResult = false;
 	let showCmpResult: typeof showResult;
 	let translate: (q: string) => void;
 
-	$: query = selectedText;
-	$: shouldAutoTranslate && _translate();
+	$effect(() => {
+		query = selectedText;
+	});
+	$effect(() => {
+		shouldAutoTranslate && _translate();
+	});
 
-	onMount(() =>
-		srv.currentService().subscribe((_service) => {
-			if (isShowResult) return (isShowResult = false);
-			query = selectedText ?? "";
-			selectedHistory = null;
-			service = _service;
-		})
-	);
+	$effect(() => {
+		let _service = srv.getCurrentService();
+		if (isShowResult) {
+			isShowResult = false;
+			return;
+		}
+		query = selectedText ?? "";
+		selectedHistory = undefined;
+		service = _service;
+	});
 
 	export async function showResult(res: HistoryEntry) {
-		if (service.name !== res.service) {
+		if (service?.name !== res.service) {
 			isShowResult = true;
-			$translationApi = res.service;
+			translationApi.val = res.service;
 			service = srv.getServiceByName(res.service);
 		}
 
@@ -48,7 +54,7 @@
 	}
 
 	function handleInputClear() {
-		selectedHistory = null;
+		selectedHistory = undefined;
 	}
 
 	function getFavicon(url: string | URL) {
@@ -76,12 +82,12 @@
 			bind:showResult={showCmpResult}
 			bind:translate
 			{query}
-			on:clear={handleInputClear}
+			onclear={handleInputClear}
 		/>
 	</div>
 	{#if selectedHistory}
 		<div class="surface-2 card divide-y">
-			{#each Object.entries(selectedHistory.sources) as [source, [title, timestamp, isPopup]]}
+			{#each Object.entries(selectedHistory.sources!) as [source, [title, timestamp, isPopup]]}
 				<div class="flex flex-col gap-1 break-words p-2">
 					<a
 						rel="noreferrer"
@@ -108,7 +114,7 @@
 							<img class="w-4" alt="favicon" src={getFavicon(source)} />
 						{/if}
 						{#if isPopup}
-							<Icon className="shrink-0" title="popup">
+							<Icon class="shrink-0" title="popup">
 								<path
 									d="M28 4H10a2.006 2.006 0 0 0-2 2v14a2.006 2.006 0 0 0 2 2h18a2.006 2.006 0 0 0 2-2V6a2.006 2.006 0 0 0-2-2Zm0 16H10V6h18Z"
 								/><path

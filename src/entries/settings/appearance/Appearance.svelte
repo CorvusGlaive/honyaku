@@ -1,8 +1,7 @@
 <script lang="ts">
-	import { RadioGroup } from "~/lib/components/Radio";
-	import Section from "~/lib/components/Section.svelte";
+	import { RadioGroup, Section } from "~/lib/components";
 	import ThemeSwitcher from "./ThemeSwitcher.svelte";
-	import { store } from "~/store";
+	import { store } from "~/store.svelte";
 	import Colors from "./Colors.svelte";
 
 	const { fontSize } = store;
@@ -15,9 +14,9 @@
 
 <Section title="Font size">
 	<RadioGroup
+		value={fontSize.val}
 		items={fontSizes}
-		value={$fontSize}
-		on:change={(e) => ($fontSize = e.detail)}
+		onchange={(e) => (fontSize.val = e)}
 	/>
 </Section>
 

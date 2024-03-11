@@ -1,26 +1,25 @@
 <script lang="ts">
 	import "~/lib/index.css";
-	import { onMount } from "svelte";
-	import { store } from "~/store";
 	import browser from "webextension-polyfill";
 	import srv from "~/services";
-	import Button from "~/lib/components/Button.svelte";
-	import Icon from "~/lib/components/Icon.svelte";
-	import { sendMessageToTab } from "~/lib/utils";
+	import { store } from "~/store.svelte";
+	import { unstate } from "svelte";
+	import { sendMessageTab } from "~/lib/utils";
 	import { getGlobalShortcuts } from "~/lib/keymapps";
-	import Scrollbar from "~/lib/components/Scrollbar.svelte";
+	import { initAppearance } from "~/entries/settings/appearance/index.svelte";
+	import { Button, Icon, Scrollbar } from "~/lib/components";
 	import TranslationServices from "~/services/TranslationServices.svelte";
 	import History from "~/lib/history";
-	import { initAppearance } from "~/entries/settings/appearance";
 
 	const { translationApi } = store;
 
-	let selectedText = "";
-	let showResult;
+	let showHistory = $state(false);
+	let selectedText = $state("");
+	let showResult: TranslationServices["showResult"];
 	initAppearance();
 
-	onMount(() => {
-		sendMessageToTab({ type: "getSelectedText" })
+	$effect(() => {
+		sendMessageTab({ type: "getSelectedText" })
 			.then((text) => (selectedText = text))
 			.catch(() => {});
 	});
@@ -36,14 +35,13 @@
 		if (!e.altKey || keyNum === undefined) return;
 		e.preventDefault();
 
-		$translationApi = srv.services.at(parseInt(keyNum) - 1).name;
+		translationApi.val = srv.services.at(parseInt(keyNum) - 1)?.name!;
 	}
-	let showHistory = false;
+	const globalShortcuts = getGlobalShortcuts();
 </script>
 
 <svelte:window
-	on:keydown|capture={handleWindowKeyDown}
-	on:keydown|capture={getGlobalShortcuts()}
+	onkeydowncapture={(e) => (handleWindowKeyDown(e), globalShortcuts(e))}
 />
 
 <main class="relative h-[26em] w-[26em] overflow-hidden">
@@ -53,18 +51,18 @@
 		>
 			{#each srv.services as service}
 				<Button
-					on:click={(_) => ($translationApi = service.name)}
-					active={$translationApi === service.name}>{service.name}</Button
+					onclick={(_) => (translationApi.val = service.name)}
+					active={translationApi.val === service.name}>{service.name}</Button
 				>
 			{/each}
 			<History
 				bind:open={showHistory}
-				on:select={(e) => showResult(e.detail)}
+				onselect={(e) => showResult(unstate(e))}
 			/>
 			<Button
 				icon
-				className="group ml-auto"
-				on:click={() => (showHistory = !showHistory)}
+				class="group ml-auto"
+				onclick={() => (showHistory = !showHistory)}
 			>
 				<Icon title="Recently searched" size={18}
 					><path
@@ -77,9 +75,9 @@
 				>
 			</Button>
 			<Button
-				className="!transition-all ml-2 !ease-in-out !duration-500 hover:rotate-180"
+				class="ml-2 !transition-all !duration-500 !ease-in-out hover:rotate-180"
 				icon
-				on:click={() => browser.runtime.openOptionsPage()}
+				onclick={() => browser.runtime.openOptionsPage()}
 			>
 				<Icon title="Settings" size={18}>
 					<path

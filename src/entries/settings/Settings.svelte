@@ -1,3 +1,5 @@
+<svelte:options runes={true} />
+
 <script lang="ts">
 	import Router, { replace, location } from "svelte-spa-router";
 	import active from "svelte-spa-router/active";
@@ -5,12 +7,14 @@
 	import HistorySettings from "./HistorySettings.svelte";
 	import Services from "./Services.svelte";
 	import Shortcuts from "./shortcuts/Shortcuts.svelte";
-	import { initAppearance, Appearance } from "./appearance";
+	import { initAppearance, Appearance } from "./appearance/index.svelte";
 	import TextLogo from "~/lib/components/TextLogo.svelte";
 
 	initAppearance();
 
-	$: $location === "/" && replace("/appearance");
+	$effect(() => {
+		return location.subscribe(($loc) => $loc === "/" && replace("/appearance"));
+	});
 
 	const routes = {
 		"/appearance": Appearance,
@@ -25,7 +29,7 @@
 		class="gradient flex items-center gap-1 border-b border-surface-100 p-2 text-2xl font-bold dark:border-surface-700"
 	>
 		<img alt="logo" class="h-[2em] w-[2em]" src="/icons/cherry.svg" />
-		<TextLogo className="w-[5em] opacity-90" />
+		<TextLogo class="w-[5em] opacity-90" />
 		<span class="opacity-50">—</span>
 		<span>Settings</span>
 	</header>

@@ -1,48 +1,63 @@
-<script lang="ts">
-	import { createEventDispatcher } from "svelte";
+<script lang="ts" generics="T">
 	import clsx from "clsx";
-	import { onMount } from "svelte";
 	import Input from "~/lib/components/Input.svelte";
 
-	export let title = "";
-	export let value: any;
-	export let disabled = false;
-	export let description: string = "";
+	interface Props {
+		title?: string;
+		value: T;
+		disabled?: boolean;
+		description?: string;
+		class?: string;
+		onchange?: (value: T) => void;
+	}
+	let {
+		title = "",
+		value,
+		disabled = false,
+		description = "",
+		class: className = "",
+		onchange,
+	} = $props<Props>();
 
-	const dispatch = createEventDispatcher();
+	let type: "radio" | "checkbox" | "text" | "color" = $state("radio");
 
-	let type: "radio" | "checkbox" | "text" | "color";
-
-	onMount(() => {
-		if (typeof value === "boolean") return (type = "checkbox");
-		if (typeof value === "string") {
-			if (value.length === 7 && value[0] === "#") return (type = "color");
-			return (type = "text");
+	$effect(() => {
+		switch (typeof value) {
+			case "boolean":
+				type = "checkbox";
+				break;
+			case "string":
+				if (value.length === 7 && value[0] === "#") type = "color";
+				else type = "text";
+				break;
+			default:
+				type = "radio";
 		}
 	});
 
 	function handleChange(e: Event) {
 		let target = e.currentTarget as HTMLInputElement;
-		let value: unknown;
+		let value: T;
 		switch (type) {
 			case "checkbox":
-				value = target.checked;
+				value = target.checked as T;
 				break;
 			default:
-				value = target.value;
+				value = target.value as T;
 				break;
 		}
-		dispatch("change", value);
+		onchange?.(value);
 	}
 
 	const radioClasses =
 		"transition-colors rounded cursor-pointer hover:bg-surface-300/20";
-	$: classes = clsx(
-		type === "radio" && radioClasses,
-		type === "checkbox" && radioClasses,
-		disabled && "pointer-events-none opacity-50",
-		"p-2 flex gap-2 justify-between items-center",
-		$$props.class
+	let classes = $derived(
+		clsx(
+			(type === "radio" || type === "checkbox") && radioClasses,
+			disabled && "pointer-events-none opacity-50",
+			"p-2 flex gap-2 justify-between items-center",
+			className,
+		),
 	);
 </script>
 
@@ -54,12 +69,17 @@
 		{/if}
 	</div>
 	{#if type === "checkbox"}
-		<input class="shrink-0" type="checkbox" checked={value} on:change={handleChange} />
+		<input
+			class="shrink-0"
+			type="checkbox"
+			checked={value as boolean}
+			onchange={handleChange}
+		/>
 	{:else if type === "text"}
-		<Input class="w-min" {value} on:change={handleChange} />
+		<Input class="w-min" value={value as string} onchange={handleChange} />
 	{:else if type === "color"}
-		<Input type="color" {value} on:change={handleChange} />
+		<Input type="color" value={value as string} onchange={handleChange} />
 	{:else}
-		<input {type} {value} on:change={handleChange} />
+		<input {type} {value} onchange={handleChange} />
 	{/if}
 </label>

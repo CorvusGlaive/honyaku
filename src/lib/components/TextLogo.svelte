@@ -1,5 +1,5 @@
-<script>
-	export let className = "";
+<script lang="ts">
+	let { class: className = "" } = $props<{ class?: string }>();
 </script>
 
 <svg viewBox="0 0 500 150" class="fill-current {className}">

@@ -1,26 +1,34 @@
 <script lang="ts">
 	import clsx from "clsx";
 
-	import { afterUpdate, getContext, onMount } from "svelte";
+	import { getContext } from "svelte";
+	import type { HTMLTextareaAttributes } from "svelte/elements";
 
-	export let value = "";
-	export let placeholder = "Translate...";
-	export let autofocus = false;
-	export let isMainInput = false;
+	interface Props extends HTMLTextareaAttributes {
+		isMainInput?: boolean;
+	}
+	let {
+		value = "",
+		placeholder = "Translate...",
+		autofocus = false,
+		isMainInput = false,
+		class: className,
+		oninput,
+		...props
+	} = $props<Props>();
 
 	const group = getContext("group");
 	let textareaRef: HTMLTextAreaElement;
 
-	onMount(() => {
+	$effect(() => {
 		autofocus && textareaRef.focus();
-
-		const resObserver = new ResizeObserver(() => {
-			textareaRef.style.height = textareaRef.scrollHeight + "px";
-		});
-		resObserver.observe(textareaRef);
-
-		return () => resObserver.disconnect();
 	});
+
+	function onInput(e: any) {
+		textareaRef.style.height = "auto";
+		textareaRef.style.height = textareaRef.scrollHeight + "px";
+		oninput?.(e);
+	}
 
 	const defaultCss = clsx(
 		"surface-2",
@@ -39,7 +47,7 @@
 		"transition-shadow",
 		"focus:shadow-md",
 		"focus:ring-brand-400",
-		$$props.class
+		className,
 	);
 
 	const groupCss = clsx(
@@ -51,7 +59,7 @@
 		"px-2",
 		"py-1.5",
 		"outline-none",
-		$$props.class
+		className,
 	);
 </script>
 
@@ -59,9 +67,8 @@
 	bind:this={textareaRef}
 	bind:value
 	data-is-main-input={isMainInput}
-	on:change
-	on:input
-	on:keydown
 	{placeholder}
 	class={group ? groupCss : defaultCss}
+	oninput={onInput}
+	{...props}
 />

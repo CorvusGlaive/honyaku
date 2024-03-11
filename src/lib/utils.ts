@@ -1,9 +1,4 @@
-import type { Options, ResponsePromise } from "ky";
-import { writable } from "svelte/store";
 import browser, { i18n } from "webextension-polyfill";
-
-export const delay = (data: unknown, ms: number) =>
-	new Promise((res) => setTimeout(() => res(data), ms));
 
 export function isContentScript() {
 	return !document.URL.startsWith(browser.runtime.getURL(""));
@@ -17,10 +12,7 @@ export async function ttsPlay(text: string, lang: string = "en") {
 		text
 	)}`;
 	if (!audio) {
-		return browser.runtime.sendMessage({
-			type: "playAudio",
-			data: url,
-		});
+		return sendMessageRuntime("playAudio", url);
 	}
 
 	audio.pause();
@@ -28,17 +20,17 @@ export async function ttsPlay(text: string, lang: string = "en") {
 	audio.play();
 }
 
-export function httpRequest(
+export async function httpRequest(
 	url: string,
-	options?: Options & { resMethod?: keyof ResponsePromise }
+	options?: RequestInit & { bodyMethod?: "json" | "text" },
 ) {
-	return browser.runtime.sendMessage({
-		type: "httpRequest",
-		data: {
-			url,
-			options,
-		},
-	});
+	if (isContentScript()) return sendMessageRuntime("httpRequest", url, options);
+
+	const resp = await fetch(url, options);
+	const bodyMethod = options?.bodyMethod || "json";
+	const result = await resp[bodyMethod]();
+
+	return result;
 }
 
 export async function getActiveTab() {
@@ -46,17 +38,21 @@ export async function getActiveTab() {
 	return tabs[0];
 }
 
-export async function sendMessageToTab(
+export function sendMessageRuntime(type: string, ...args: any): Promise<any> {
+	return browser.runtime.sendMessage({ type, data: args });
+}
+
+export async function sendMessageTab(
 	msg: { type: string; data?: any },
 	tabId?: number
 ) {
 	const activeTab = await getActiveTab();
-	return browser.tabs.sendMessage(tabId ?? activeTab.id, msg);
+	return browser.tabs.sendMessage(tabId ?? activeTab.id!, msg);
 }
 
 export function getRootElement(): HTMLElement {
 	return isContentScript()
-		? document.getElementById("honyaku").shadowRoot.querySelector("main")
+		? document.getElementById("honyaku")!.shadowRoot!.querySelector("main")!
 		: document.documentElement;
 }
 
@@ -64,30 +60,6 @@ export function getScrollContainer() {
 	return (
 		document.getElementById("honyaku")?.shadowRoot || document
 	).querySelector("[data-scrollbar-content]");
-}
-
-export function writableStore<T = unknown>(value: T) {
-	const _store = writable(value);
-
-	function set(newValue: T) {
-		value = newValue;
-		_store.set(newValue);
-	}
-
-	function get() {
-		return value;
-	}
-
-	function update(fn: (v: T) => T) {
-		set(fn(value));
-	}
-
-	return {
-		set,
-		get,
-		update,
-		subscribe: _store.subscribe,
-	};
 }
 
 export function t(msg: string, substitutions?: string | string[]) {

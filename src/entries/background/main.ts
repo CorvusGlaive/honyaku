@@ -1,22 +1,9 @@
-import ky, { type ResponsePromise, type Options } from "ky";
 import { runtime, tabs } from "webextension-polyfill";
-import { getActiveTab } from "~/lib/utils";
-import { addHistory } from "~/lib/history";
-import { db } from "~/lib/db";
-
+import { getActiveTab, httpRequest } from "~/lib/utils";
+import { addHistory } from "~/lib/history/history";
+import srv from "~/services";
+srv; // used for services' store setup
 const audio = globalThis.Audio && new Audio(); // For MV2 create HTMLAudioElement to play sounds from content scripts.
-export interface ICacheDB {
-	key: string;
-	value: {
-		url: string;
-		result: unknown;
-		time: number;
-	};
-	indexes: {
-		url: string;
-		time: number;
-	};
-}
 
 async function playAudio(url: string) {
 	if (audio) {
@@ -35,42 +22,12 @@ async function playAudio(url: string) {
 	});
 }
 
-const cacheInvalidationTime = 1000 * 60 * 60 * 24; // 24 hours
-async function httpRequest(params: {
-	url: string;
-	options?: Options & { resMethod?: keyof ResponsePromise };
-}) {
-	const cacheDB = await db;
-	const cachedResult = await cacheDB.get("cache", params.url);
-	if (cachedResult && Date.now() - cachedResult.time < cacheInvalidationTime)
-		return cachedResult.result;
-
-	//@ts-ignore
-	const result = await ky(params.url, params.options)[
-		params.options?.resMethod || "json"
-	]();
-	cacheDB.put("cache", { url: params.url, result, time: Date.now() });
-	return result;
-}
-
-const messageHanlders = {
-	httpRequest,
+const messageHanlders: Record<string, (...args: any[]) => Promise<any>> = {
 	playAudio,
+	httpRequest,
 	addHistory,
 };
 
 runtime.onMessage.addListener(async ({ type, data }) => {
-	console.log(
-		`%cGot message: %c${type} -> `,
-		"color: hotpink; font-size: 17.6px;",
-		"color: violet; font-size: 16.32px;",
-		data ?? "🤔"
-	);
-
-	return messageHanlders[type]?.(data);
-});
-
-runtime.onStartup.addListener(async () => {
-	const cache = await db;
-	cache.clear("cache").catch((e) => console.log("onStartup:clear:catch", e));
+	return messageHanlders[type]?.(...data);
 });

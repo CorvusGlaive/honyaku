@@ -1,4 +1,5 @@
 import browser from "webextension-polyfill";
+import { mount } from "svelte";
 import App from "./Content.svelte";
 
 async function render(cssPaths: string[]) {
@@ -18,6 +19,7 @@ async function render(cssPaths: string[]) {
 	} else {
 		for (const cssPath of cssPaths) {
 			const styleEl = document.createElement("link");
+			styleEl.className = "darkreader";
 			styleEl.setAttribute("rel", "stylesheet");
 			styleEl.setAttribute("href", browser.runtime.getURL(cssPath));
 			shadowRoot.appendChild(styleEl);
@@ -27,7 +29,7 @@ async function render(cssPaths: string[]) {
 	document.body.appendChild(shadowHost);
 	shadowRoot.appendChild(appContainer);
 
-	new App({ target: appContainer });
+	mount(App, { target: appContainer });
 }
 
 render(import.meta.PLUGIN_WEB_EXT_CHUNK_CSS_PATHS);
@@ -35,7 +37,7 @@ render(import.meta.PLUGIN_WEB_EXT_CHUNK_CSS_PATHS);
 browser.runtime.onMessage.addListener(async ({ type }) => {
 	switch (type) {
 		case "getSelectedText":
-			return window.getSelection().toString().trim();
+			return window.getSelection()?.toString().trim() || "";
 		default:
 			break;
 	}

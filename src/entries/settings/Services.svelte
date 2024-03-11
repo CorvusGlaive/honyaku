@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Section from "~/lib/components/Section.svelte";
-	import { store } from "~/store";
+	import { store } from "~/store.svelte";
 	import { t } from "~/lib/utils";
 	import OptionEntry from "./OptionEntry.svelte";
 
@@ -8,35 +8,36 @@
 
 	function toggleService(name: string, settings: any) {
 		settings.enabled = !settings.enabled;
-		$services[name] = settings;
+		services.val[name] = settings;
 
 		if (settings.enabled) return;
 
-		const newService = Object.entries($services).find(([_, s]) => s.enabled);
-		if (!newService.length) return;
-		$translationApi = newService[0];
+		const newService = Object.entries(services.val).find(([_, s]) => s.enabled);
+		if (!newService?.length) return;
+		translationApi.val = newService[0];
 	}
 
 	function getSettingsInfo(service: string, title: string) {
-		const _title = t(`${service}Settings${title.toUpperCase()}Title`) || null;
-		const desc = t(`${service}Settings${title.toUpperCase()}Desc`) || null;
+		const _title =
+			t(`${service}Settings${title.toUpperCase()}Title`) || undefined;
+		const desc = t(`${service}Settings${title.toUpperCase()}Desc`) || undefined;
 		return [_title, desc];
 	}
 </script>
 
-{#each Object.entries($services) as [name, settings]}
+{#each Object.entries(services.val) as [name, settings]}
 	<Section title={name} class="w-3/4">
 		<OptionEntry
 			title={t("serviceSettingsEnableTitle")}
 			value={settings.enabled}
-			on:change={() => toggleService(name, settings)}
+			onchange={() => toggleService(name, settings)}
 		/>
 		<OptionEntry
 			disabled={!settings.enabled}
 			title={t("serviceSettingsColorTitle")}
 			value={settings.color}
 			description={t("serviceSettingsColorDesc")}
-			on:change={(e) => (settings.color = e.detail)}
+			onchange={(e) => (settings.color = e)}
 		/>
 		{#each Object.entries(settings?.settings || {}) as [settingsTitle, value]}
 			{@const [title, desc] = getSettingsInfo(name, settingsTitle)}
@@ -45,7 +46,7 @@
 				{title}
 				{value}
 				description={desc}
-				on:change={(e) => (settings.settings[settingsTitle] = e.detail)}
+				onchange={(e) => (settings.settings[settingsTitle] = e)}
 			/>
 		{/each}
 	</Section>
