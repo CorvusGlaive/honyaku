@@ -8,15 +8,18 @@
 	import { runtime } from "webextension-polyfill";
 	import type { Snippet } from "svelte";
 
+	interface Props {
+		containerClasses?: string;
+		class?: string;
+		scrollTop?: number;
+		children: Snippet;
+	}
 	let {
 		containerClasses = "",
 		class: className = "",
+		scrollTop,
 		children,
-	} = $props<{
-		containerClasses?: string;
-		class?: string;
-		children: Snippet;
-	}>();
+	} = $props<Props>();
 
 	const isFirefox = getBrowser() === "firefox";
 
@@ -30,6 +33,9 @@
 	let ctrStartScrollTop = 0;
 	let htmlStyles: { cursor: string; pointerEvents: string; userSelect: string };
 
+	$effect(() => {
+		if (scrollTop !== undefined) container.scrollTop = scrollTop;
+	});
 	$effect(() => {
 		toggleCursorStyles(isThumbHold);
 		_isScrollThumbHold = isThumbHold;
@@ -228,13 +234,13 @@
 					isThumbHold
 						? 'w-full bg-white dark:bg-black'
 						: 'w-1/2'}"
-					class:shadow-inner={isScrollbarHover || isThumbHold}
 				>
 					<div
 						data-scrollbar-thumb
 						bind:this={scrollThumb}
 						onmousedown={handleThumbMouseDown}
-						class="relative h-1 scale-y-95 [&>*]:bg-brand-300 [&>*]:hover:bg-brand-400 [&>*]:active:bg-brand-600"
+						class="relative h-1 *:bg-brand-300 *:hover:bg-brand-400 *:active:bg-brand-600"
+						class:py-0.5={isScrollbarHover || isThumbHold}
 						style="height: {thumbHeight}px; top: {thumbTop}%;"
 					>
 						<div class="mx-auto h-full w-1/2 rounded-md" />
