@@ -2,6 +2,7 @@
 	import Fuse from "fuse.js";
 	import ChevronIcon from "../icons/ChevronIcon.svelte";
 	import Icon from "./Icon.svelte";
+	import Scrollbar, { isScrollThumbHold } from "./Scrollbar.svelte";
 	import { computePosition, size } from "@floating-ui/dom";
 
 	type Item = {
@@ -34,6 +35,7 @@
 	let floatingEl: HTMLElement;
 	let refEl: HTMLElement;
 	let inputRef: HTMLInputElement;
+	let scrollTop = $state(-1);
 
 	const fuse = new Fuse<Item>([], {
 		keys: [
@@ -54,7 +56,11 @@
 		if (open) {
 			placeDropDown(refEl, floatingEl);
 			initSelection();
-		} else onClose();
+			scrollTop = 0;
+		} else {
+			onClose();
+			scrollTop = -1;
+		}
 	});
 	$effect(() => {
 		searchItems.length && initSelection();
@@ -79,7 +85,7 @@
 			middleware: [
 				size({
 					apply({ availableHeight }) {
-						_floatingEl.style.maxHeight = `${availableHeight}px`;
+						_floatingEl.style.height = `${availableHeight}px`;
 					},
 					padding: 8,
 				}),
@@ -139,6 +145,8 @@
 
 	function clickOutside(node: HTMLElement, cb: () => void) {
 		const handleClick = (e: MouseEvent) => {
+			if (!open) return;
+			if (isScrollThumbHold()) return;
 			if (!node) return;
 			if (!e.target) return;
 
@@ -146,10 +154,10 @@
 			!path.includes(node) && cb();
 		};
 
-		window.addEventListener("click", handleClick, true);
+		window.addEventListener("mouseup", handleClick, true);
 		return {
 			destroy() {
-				window.removeEventListener("click", handleClick, true);
+				window.removeEventListener("mouseup", handleClick, true);
 			},
 		};
 	}
@@ -234,27 +242,29 @@
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<div
 		bind:this={floatingEl}
-		class="select surface-2 scrollbar absolute left-1/2 z-10 grid max-h-80 w-full -translate-x-1/2 gap-1 overflow-auto rounded-b-md p-2 py-2 shadow-md"
+		class="select surface-2 absolute left-1/2 z-10 w-full -translate-x-1/2 rounded-b-md shadow-md"
 		class:hidden={!open}
 		onclick={handleSelect}
 		onmouseover={handleMouseOver}
 	>
-		{#each availableItems as item, i}
-			{#if item.groupHeader}
-				<div class="font-bold">{item.groupHeader}</div>
-			{:else}
-				<div
-					data-pos={i}
-					class:bg-surface-400={i === selectedId}
-					class:bg-opacity-20={i === selectedId}
-					class:selected={item.value === value}
-					class="cursor-default overflow-hidden text-ellipsis whitespace-nowrap rounded px-2 py-0.5 text-left"
-					title={item.text}
-				>
-					{item.text}
-				</div>
-			{/if}
-		{/each}
+		<Scrollbar {scrollTop} containerClasses="grid auto-rows-max gap-1 p-2 py-2">
+			{#each availableItems as item, i}
+				{#if item.groupHeader}
+					<div class="font-bold">{item.groupHeader}</div>
+				{:else}
+					<div
+						data-pos={i}
+						class:bg-surface-400={i === selectedId}
+						class:bg-opacity-20={i === selectedId}
+						class:selected={item.value === value}
+						class="cursor-default overflow-hidden text-ellipsis whitespace-nowrap rounded px-2 py-0.5 text-left"
+						title={item.text}
+					>
+						{item.text}
+					</div>
+				{/if}
+			{/each}
+		</Scrollbar>
 	</div>
 </div>
 
