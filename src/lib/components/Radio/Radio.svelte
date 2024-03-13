@@ -26,8 +26,7 @@
 	let groupClasses = $derived(
 		clsx(
 			_group !== value && "hover:bg-surface-100 dark:hover:bg-surface-600/50",
-			// "[&:has(:checked)]:bg-brand-500 [&:has(:checked)]:text-white [&:has(:checked)]:hover:bg-brand-400", //:has doesn't work in firefox, should be available in a first half of 23.
-			_group === value && "bg-brand-500 text-white hover:bg-brand-400",
+			"has-[:checked]:bg-brand-500 has-[:checked]:text-white has-[:checked]:hover:bg-brand-400",
 		),
 	);
 	let classes = $derived(
