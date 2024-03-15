@@ -34,7 +34,7 @@
 	let htmlStyles: { cursor: string; pointerEvents: string; userSelect: string };
 
 	$effect(() => {
-		if (scrollTop !== undefined) container.scrollTop = scrollTop;
+		if (scrollTop !== undefined && container) container.scrollTop = scrollTop;
 	});
 	$effect(() => {
 		toggleCursorStyles(isThumbHold);
